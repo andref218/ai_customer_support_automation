@@ -1,0 +1,109 @@
+{
+  "name": "Support Router Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "request"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-176, -32],
+      "id": "acb17175-8eb7-4139-ae25-ba5c82680ead",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Support Router Agent in an AI-powered customer support system.\n\nYour role is to analyze incoming customer support requests and classify them so the main support system can determine how the request should be handled.\n\nYou are responsible for:\n\n- Understanding the customer's request.\n- Identifying the customer's primary intent.\n- Categorizing the request.\n- Determining its priority.\n- Identifying whether customer-specific data is required.\n- Identifying whether the knowledge base should be consulted.\n- Identifying whether human intervention may be required.\n- Providing a concise summary of the request.\n\nDo not attempt to solve the customer's problem.\n\nDo not provide a final response to the customer.\n\nDo not invent customer information, company policies, product information, or other facts that are not present in the request or conversation context.\n\nBase your classification only on the information available to you.\n\nIf the customer's intent is unclear, use the most appropriate general classification and indicate that additional information may be required.\n\nPriority should reflect the urgency and potential impact of the customer's request, not simply the customer's tone.\n\nReturn only the structured output defined by the output schema.\n\nYour output will be used by the Main Agent to determine the next step in the customer support process."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [0, -32],
+      "id": "5305ecfa-ea4f-4c16-b29e-f9f294d5602e",
+      "name": "Support Router Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-128, 176],
+      "id": "fd25442f-3191-45c9-afe0-fa420a844e49",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"intent\": {\n      \"type\": \"string\",\n      \"description\": \"The primary intent of the customer request.\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"The category of the customer request.\"\n    },\n    \"priority\": {\n      \"type\": \"string\",\n      \"enum\": [\"low\", \"medium\", \"high\", \"urgent\"],\n      \"description\": \"The priority of the customer request.\"\n    },\n    \"requires_customer_data\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether customer-specific data is needed to handle the request.\"\n    },\n    \"requires_knowledge_search\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the company knowledge base should be consulted.\"\n    },\n    \"requires_human\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether human intervention is currently required.\"\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"A concise summary of the customer's request.\"\n    },\n    \"additional_information_needed\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Information that is missing and may be required to handle the request.\"\n    }\n  },\n  \"required\": [\n    \"intent\",\n    \"category\",\n    \"priority\",\n    \"requires_customer_data\",\n    \"requires_knowledge_search\",\n    \"requires_human\",\n    \"summary\",\n    \"additional_information_needed\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [256, -176],
+      "id": "c7e5fd6f-0be3-426e-be93-0766d10c2d0d",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Support Router Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Support Router Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Support Router Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

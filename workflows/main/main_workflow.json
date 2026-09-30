@@ -1,0 +1,146 @@
+{
+  "name": "Main Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [-176, 0],
+      "id": "a6ed3ec8-6f8a-42b9-b656-fa9b6b85e043",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are the Main Agent of an AI-powered customer support system.\n\nYour role is to orchestrate the customer support process and ensure that each customer request is handled appropriately.\n\nYou are the main point of contact between the customer and the specialized support agents.\n\nYour responsibilities are to:\n\n- Understand the customer's request and maintain the conversation context.\n- Use the Support Router Agent to classify and structure incoming customer support requests.\n- Determine what information or specialized support is required based on the router's classification.\n- Delegate tasks to the appropriate specialized agents when available.\n- Coordinate the information returned by those agents.\n- Ensure that the customer's request is properly handled before providing a final response.\n- Escalate the request when it cannot be safely or reliably resolved by the AI system.\n\nWhen a new customer support request is received, use the Support Router Agent to classify the request before deciding how it should be handled.\n\nYou are an orchestrator, not the primary source of specialized knowledge.\n\nDo not invent company policies, product information, customer information, or other facts that have not been provided or retrieved through the appropriate systems.\n\nDo not independently perform tasks that should be handled by specialized agents.\n\nWhen a specialized agent is responsible for a task, delegate that task rather than attempting to perform it yourself.\n\nAlways maintain the context of the current conversation and use previous messages when they are relevant.\n\nIf the available information is insufficient to resolve the customer's request, do not guess. Request the necessary information or escalate the case when appropriate.\n\nYour final response should be clear, concise, and appropriate for a customer support conversation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [16, 0],
+      "id": "105af710-b30f-49cd-a01b-c569aa88f452",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "medium"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-128, 208],
+      "id": "323472e8-5c3c-4f07-878a-93bd6bb93a58",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 8
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [32, 208],
+      "id": "5098791a-37ab-43ed-8221-0b0016d60076",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "Classifies and structures an incoming customer support request. Use this tool to identify the customer's intent, category, priority, required customer data, whether the knowledge base should be consulted, whether human intervention may be required, and any additional information needed.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('request', `The customer's original support request or message that needs to be classified.`, 'string') }}"
+          },
+          "matchingColumns": ["request"],
+          "schema": [
+            {
+              "id": "request",
+              "displayName": "request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [304, 208],
+      "id": "1bec9322-e4d2-4928-bfa7-19db6ae3ea9c",
+      "name": "Call 'Support Router Agent'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Support Router Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

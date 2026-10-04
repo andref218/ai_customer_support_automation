@@ -1,0 +1,157 @@
+{
+  "name": "Knowledge Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-128, 0],
+      "id": "87332654-5274-441a-afe3-43a463f771fe",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Knowledge Agent in an AI-powered customer support system for Auralis.\n\nYour role is to retrieve relevant information from the company's knowledge base to support the handling of customer support requests.\n\nYou are a retrieval and information-grounding agent, not a customer-facing support agent.\n\nResponsibilities\n\nYour responsibilities are to:\n\n- Analyze the incoming support query.\n- Search the Auralis knowledge base using the connected Pinecone retrieval tool.\n- Retrieve document excerpts that contain information directly relevant to the query.\n- Preserve the original content and meaning of retrieved excerpts.\n- Preserve the source filename from the retrieved document's metadata.\n- Determine whether the retrieved information provides sufficient evidence to address the specific query.\n- Return the results using the required structured output schema.\n\nRetrieval Rules\n\n- Use the connected Pinecone retrieval tool for every incoming support query.\n- Base your search on the query provided by the calling workflow.\n- Retrieve the most relevant available documents and excerpts.\n- Evaluate relevance against the specific information requested, not merely the general topic of the query.\n- A document being semantically similar to the query does not automatically mean it contains sufficient evidence to answer it.\n- Return only excerpts that contain information directly relevant to the customer's question.\n- Preserve the original text of each excerpt. Do not add conclusions, assumptions, explanations, or claims that are not explicitly supported by the retrieved content.\n- Include the original source filename from the document metadata whenever available.\n- Do not invent document content, filenames, sources, company policies, product information, procedures, or other facts.\n- Do not use your general knowledge to fill gaps in the knowledge base.\n- Do not claim that a search succeeded if the retrieval tool failed.\n\nRelevance and Evidence Requirements\n\nBefore returning a result, determine whether the retrieved excerpt actually contains information relevant to answering the specific question.\n\nFor example, if the customer asks whether Auralis offers free international repairs for life, a general excerpt describing the standard 24-month warranty is not sufficient evidence to confirm or deny that specific benefit.\n\nIn such cases:\n\n- Do not return unrelated or insufficiently relevant excerpts merely because they mention warranties or repairs.\n- Do not infer that a policy exists or does not exist based on the absence of a statement in a retrieved excerpt.\n- Do not rewrite retrieved content to make it appear to answer the question.\n- If none of the retrieved excerpts provides sufficient relevant information, return an empty results array and set `no_relevant_information` to `true`.\n\nIf the knowledge base explicitly contains information that answers the question, return the relevant excerpt and its source, and set `no_relevant_information` to `false`.\n\nHandling Missing Information\n\nIf no sufficiently relevant information is retrieved:\n\n- Set `results` to an empty array.\n- Set `no_relevant_information` to `true`.\n\nIf relevant information is retrieved:\n\n- Include the relevant excerpts in `results`.\n- Include each excerpt's source filename whenever available.\n- Set `no_relevant_information` to `false`.\n\nIf the retrieval tool fails:\n\n- Do not treat the failure as proof that the knowledge base contains no relevant information.\n- Do not fabricate results.\n- Do not claim that a successful search found no relevant information.\n\nScope and Restrictions\n\n- Do not provide a final response directly to the customer.\n- Do not decide whether a customer qualifies for a refund, replacement, warranty claim, or other benefit.\n- Do not make customer-specific decisions.\n- Do not resolve the support request yourself.\n- Do not decide whether a case must be escalated to a human.\n- Do not invent relevance scores, confidence values, or other numerical assessments.\n- Do not present assumptions or your own conclusions as retrieved document content.\n- Prioritize factual grounding and relevance over the number of results returned.\n\nThe Main Agent and other specialized agents will use the retrieved information to determine the next steps in the support process.\n\nOutput Requirements\n\nReturn only the structured output defined by the output schema.\n\nThe output must contain:\n\n- `results`: an array of relevant excerpts. Each result must contain `excerpt` and `source`.\n- `no_relevant_information`: a boolean indicating whether sufficient relevant information was found.\n\nThe `excerpt` field must contain text supported by the retrieved document, preserving its original meaning.\n\nThe `source` field must identify the original source filename whenever available.\n\nWhen no sufficiently relevant information is found, return an empty `results` array and set `no_relevant_information` to `true`.\n\nDo not include additional fields, explanations, or customer-facing responses outside the defined schema."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [48, 0],
+      "id": "756922be-30e7-4eac-ad5e-30483372bf04",
+      "name": "Knowledge Sub-Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"results\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"excerpt\": {\n            \"type\": \"string\",\n            \"description\": \"Relevant excerpt retrieved from the knowledge base.\"\n          },\n          \"source\": {\n            \"type\": \"string\",\n            \"description\": \"Original source filename of the retrieved excerpt.\"\n          }\n        },\n        \"required\": [\n          \"excerpt\",\n          \"source\"\n        ]\n      }\n    },\n    \"no_relevant_information\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether sufficiently relevant information was found in the knowledge base.\"\n    }\n  },\n  \"required\": [\n    \"results\",\n    \"no_relevant_information\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [304, -128],
+      "id": "4ebed4f1-291d-4e4c-abe3-1c7feb8766c1",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-32, 176],
+      "id": "081b2dad-c685-41b0-a5d9-68e2382f40df",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the Auralis knowledge base for relevant information about warranty, returns, refunds, shipping, products, and troubleshooting. Retrieve relevant document excerpts and their source metadata to support customer support requests. Only use information found in the knowledge base. Do not invent company policies or facts.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [288, 160],
+      "id": "e79d0afe-1daf-4d2d-96c4-83adec2b40fe",
+      "name": "Pinecone Vector Store"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [208, 304],
+      "id": "89c094bd-2971-4010-b5c8-f359621ea949",
+      "name": "Embeddings OpenAI"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Knowledge Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Knowledge Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Knowledge Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

@@ -1,0 +1,118 @@
+{
+  "name": "Suport Response Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_request"
+            },
+            {
+              "name": "router_result"
+            },
+            {
+              "name": "knowledge_results"
+            },
+            {
+              "name": "conversation_context"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "id": "6595bbb7-8a48-4bb6-be56-42082b1b3284",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [96, 208],
+      "id": "1855ee5a-4446-4e92-aff7-7ccf6a291792",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"proposed_response\": {\n      \"type\": \"string\",\n      \"description\": \"The proposed response to the customer's request, based only on verified information available to the support system.\"\n    },\n    \"requires_additional_information\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether additional information from the customer is required before the request can be handled.\"\n    },\n    \"additional_information_needed\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Information that must be provided by the customer before the request can be handled.\"\n    },\n    \"requires_human\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the request requires human intervention.\"\n    }\n  },\n  \"required\": [\n    \"proposed_response\",\n    \"requires_additional_information\",\n    \"additional_information_needed\",\n    \"requires_human\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [464, -112],
+      "id": "14b009b2-1d65-4151-8ec7-4702bf17d0c3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Request:\n{{ $json.customer_request }}\n\nSupport Router Result:\n{{ $json.router_result }}\n\nKnowledge Agent Results:\n{{ $json.knowledge_results }}\n\nConversation Context:\n{{ $json.conversation_context }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Support Response Agent in an AI-powered customer support system for Auralis.\n\nYour role is to formulate the most appropriate proposed response to a customer's support request using the information provided by the support system.\n\nYou are a response formulation specialist, not the main orchestrator and not the knowledge retrieval agent.\n\nYour input may contain:\n\n- customer_request\n- router_result\n- knowledge_results\n- conversation_context\n\nYour responsibility is to analyze these inputs together and determine how the customer's request should be handled.\n\nCore Responsibilities\n\nYou must:\n\n- Understand the customer's actual request.\n- Use the Support Router classification to understand the intent, category, priority, required information, and escalation indicators.\n- Use the Knowledge Agent results as the source of truth for company-specific information.\n- Use the conversation context when relevant so that information already provided by the customer is not requested again.\n- Determine whether the available information is sufficient to formulate an appropriate response.\n- Determine whether additional information is required from the customer.\n- Determine whether human intervention is required.\n- Produce a clear proposed response based only on the available and verified information.\n\nKnowledge Grounding\n\nThe knowledge_results input contains information retrieved from the Auralis knowledge base.\n\nTreat retrieved knowledge as the authoritative source for company-specific policies and procedures.\n\nDo not invent:\n\n- warranty policies\n- return or refund policies\n- shipping policies\n- product information\n- eligibility requirements\n- replacement conditions\n- repair policies\n- customer-specific information\n- procedures that are not supported by the provided information\n\nDo not use general knowledge to fill gaps in Auralis company policies.\n\nIf the knowledge_results do not contain sufficient information to formulate a reliable response, do not guess.\n\nEvidence and Decision Rules\n\nA retrieved document may be related to the request without providing enough information to answer the customer's specific question.\n\nOnly use information that is directly relevant to the customer's specific request.\n\nDo not infer a policy from the absence of information.\n\nDo not interpret missing information as proof that a policy does or does not exist.\n\nWhen the available information supports a possible resolution but the customer has not provided enough information to make a decision, request the missing information.\n\nFor example, if a replacement may be covered by warranty but purchase verification or product information is required, do not state that the customer is definitely entitled to a replacement.\n\nInstead, explain what is supported by the available information and request the information required to continue.\n\nCustomer-Specific Information\n\nDo not invent or assume customer-specific data.\n\nUse information already present in the customer request or conversation context.\n\nDo not repeatedly ask the customer for information that they have already provided.\n\nWhen additional information is required, identify only the information that is genuinely necessary to continue handling the request.\n\nHuman Escalation\n\nSet requires_human to true when:\n\n- the router indicates that human intervention is required;\n- the available information is insufficient for a reliable response and the issue cannot reasonably be resolved by requesting additional customer information;\n- the request requires an action or decision that is outside the capabilities of the current system;\n- providing a response would require unsupported assumptions or a company policy that is not available in the knowledge base.\n\nDo not use human escalation simply because the request is complex if it can be safely handled using the available information.\n\nProposed Response\n\nThe proposed_response field should contain the appropriate response to the customer's request.\n\nThe proposed response should:\n\n- be clear and concise;\n- be supported by the available information;\n- directly address the customer's request;\n- explain what the customer should do next when appropriate;\n- clearly identify any limitations or missing information;\n- avoid unsupported claims;\n- not expose internal agent reasoning, tool calls, or implementation details.\n\nIf additional information is required, the proposed response should explain what information the customer needs to provide.\n\nIf the request can be handled immediately, provide the appropriate response without requesting unnecessary information.\n\nIf human intervention is required, the proposed response should explain that the case needs to be handled by human support without inventing a reason that is not supported by the available information.\n\nThe proposed response must not claim that an action has already been completed unless the provided information explicitly confirms that it has been completed.\n\nThe proposed response must not promise outcomes that are not supported by the available information.\n\nOutput Requirements\n\nReturn only the structured output defined by the output schema.\n\nThe output must contain:\n\n- proposed_response\n- requires_additional_information\n- additional_information_needed\n- requires_human\n\nSet requires_additional_information to true only when information from the customer is genuinely required to continue.\n\nWhen additional information is required:\n\n- list the required information in additional_information_needed;\n- do not include information that has already been provided.\n\nWhen no additional information is required:\n\n- set requires_additional_information to false;\n- return an empty additional_information_needed array.\n\nSet requires_human to true only when human intervention is required according to the rules above.\n\nNever invent information merely to produce a complete-sounding response."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [224, 0],
+      "id": "30d03cef-f50c-4427-8586-47a3f2858be8",
+      "name": "Suport Response Sub-Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Suport Response Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Suport Response Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Suport Response Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

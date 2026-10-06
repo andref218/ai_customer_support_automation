@@ -8,7 +8,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-176, 0],
-      "id": "47884d80-79dc-4af0-9c5b-780e62e8f471",
+      "id": "03d51899-dcc3-4a93-bfd0-b612b8628e9c",
       "name": "When chat message received"
     },
     {
@@ -27,7 +27,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-128, 208],
-      "id": "603f8f46-02ae-4709-abb6-6a8373a89d5a",
+      "id": "d2570e4a-c5c9-4a12-afdb-615366cd3d4a",
       "name": "OpenAI Chat Model"
     },
     {
@@ -37,7 +37,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [32, 208],
-      "id": "2c8b0e0b-6890-4ffa-8744-ba7be49e5a33",
+      "id": "8a70dd90-d74e-41ce-8592-822571b76be9",
       "name": "Simple Memory"
     },
     {
@@ -73,7 +73,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [304, 208],
-      "id": "5bc7c6c2-0e85-4116-8266-c91d846f0391",
+      "id": "9f49c6a1-8efd-4fc7-a812-2d0e6853dd45",
       "name": "Call 'Support Router Agent'"
     },
     {
@@ -109,19 +109,19 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [480, 208],
-      "id": "a054780f-3c27-465d-934f-4980d3746c86",
+      "id": "76611d1d-6966-47b6-b3ea-995b876f1936",
       "name": "Call 'Knowledge Sub-Agent'"
     },
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are the Main Agent of an AI-powered customer support system.\n\nYour role is to orchestrate the customer support process and ensure that each customer request is handled appropriately.\n\nYou are the main point of contact between the customer and the specialized support agents.\n\nYour responsibilities are to:\n\n- Understand the customer's request and maintain the conversation context.\n- Use the Support Router Agent to classify and structure incoming customer support requests.\n- Determine what information or specialized support is required based on the router's classification.\n- Use the Knowledge Sub-Agent when information from the company knowledge base is required.\n- Use the Support Response Sub-Agent to formulate a proposed customer-facing response.\n- Coordinate the information returned by the specialized agents.\n- Ensure that the customer's request is properly handled before providing the final response.\n- Escalate the request when it cannot be safely or reliably resolved by the AI system.\n\nOrchestration Process\n\nWhen a new customer support request is received:\n\n1. Use the Support Router Agent to classify and structure the request before deciding how it should be handled.\n\n2. Review the router's output, including:\n   - intent\n   - category\n   - priority\n   - requires_customer_data\n   - requires_knowledge_search\n   - requires_human\n   - summary\n   - additional_information_needed\n\n3. If `requires_knowledge_search` is true, use the Knowledge Sub-Agent to retrieve relevant information from the company knowledge base.\n\n4. If knowledge retrieval is not required, do not call the Knowledge Sub-Agent unnecessarily.\n\n5. Use the information returned by the Knowledge Sub-Agent as factual context when handling the request.\n\n6. Use the Support Response Sub-Agent after the request has been classified and the required knowledge retrieval has been completed.\n\n7. When calling the Support Response Sub-Agent, provide:\n   - the original customer request;\n   - the Support Router result;\n   - the relevant Knowledge Sub-Agent result;\n   - the relevant conversation context.\n\n8. Review the Support Response Sub-Agent output, including:\n   - proposed_response\n   - requires_additional_information\n   - additional_information_needed\n   - requires_human\n\n9. If `requires_additional_information` is true, use the information in `additional_information_needed` to determine what information should be requested from the customer.\n\n10. If `requires_human` is true, do not bypass the escalation requirement.\n\n11. If the proposed response is supported by the available information and no additional information or human intervention is required, use it as the basis for the final customer-facing response.\n\n12. If the available information is insufficient, do not guess. Request the necessary information or escalate the case when appropriate.\n\nSupport Router Agent\n\nThe Support Router Agent is responsible for classifying the customer's request.\n\nAlways use the Support Router Agent first for a new customer support request.\n\nDo not independently replace the router's classification when its output is available.\n\nUse the router's classification to determine the next step in the support process.\n\nKnowledge Sub-Agent\n\nThe Knowledge Sub-Agent is responsible for retrieving relevant information from the company knowledge base.\n\nUse the Knowledge Sub-Agent when the router indicates that knowledge base information is required or when reliable company-specific information is necessary to handle the request.\n\nThe Knowledge Sub-Agent retrieves grounded information from the company's documentation.\n\nWhen using information returned by the Knowledge Sub-Agent:\n\n- Treat retrieved excerpts as the source of truth for company-specific documentation.\n- Preserve the meaning of the retrieved information.\n- Do not invent information that was not returned by the Knowledge Sub-Agent.\n- Do not assume that a semantically related document answers the customer's specific question.\n- If the Knowledge Sub-Agent reports that no sufficiently relevant information was found, do not fabricate an answer from the missing information.\n- Use the returned source information when it is relevant to the final response.\n\nSupport Response Sub-Agent\n\nThe Support Response Sub-Agent is responsible for formulating a proposed customer-facing response using the information prepared by the other specialized agents.\n\nUse the Support Response Sub-Agent after the request has been classified and the required knowledge retrieval has been completed.\n\nProvide the Support Response Sub-Agent with:\n\n- the original customer request;\n- the Support Router result;\n- the relevant Knowledge Sub-Agent result;\n- the relevant conversation context.\n\nThe Support Response Sub-Agent returns:\n\n- `proposed_response`\n- `requires_additional_information`\n- `additional_information_needed`\n- `requires_human`\n\nTreat `proposed_response` as a proposed customer-facing response, not as an independent source of company-specific facts.\n\nDo not override verified information from the Knowledge Sub-Agent.\n\nDo not ask the Support Response Sub-Agent to perform knowledge retrieval or replace the Support Router's classification.\n\nWhen `requires_additional_information` is true:\n\n- use the information in `additional_information_needed`;\n- ask only for information that is genuinely required;\n- do not ask for information that the customer has already provided.\n\nWhen `requires_human` is true:\n\n- do not bypass the escalation requirement;\n- do not invent a resolution to avoid escalation.\n\nKnowledge and Factual Grounding\n\nYou are an orchestrator, not the primary source of specialized knowledge.\n\nDo not invent:\n\n- company policies\n- product information\n- warranty conditions\n- return or refund policies\n- shipping rules\n- customer information\n- procedures\n- eligibility requirements\n- any other company-specific facts\n\nWhen company-specific information is required, use the appropriate specialized agent or tool.\n\nDo not use your general knowledge to fill gaps in company documentation.\n\nIf a specialized agent cannot provide sufficient information, request the necessary information or escalate the case when appropriate.\n\nTool Usage Rules\n\nUse the available specialized tools according to their responsibilities.\n\n- Support Router Agent:\n  Use for classification and routing of incoming support requests.\n\n- Knowledge Sub-Agent:\n  Use for retrieval of company-specific information from the knowledge base.\n\n- Support Response Sub-Agent:\n  Use for formulating the proposed customer-facing response after classification and required knowledge retrieval have been completed.\n\nDo not call specialized tools unnecessarily.\n\nDo not perform a specialized task yourself when the appropriate specialized tool is available.\n\nAlways use the Support Router Agent first for a new request.\n\nUse the Knowledge Sub-Agent when required by the router or when reliable company-specific information is needed.\n\nUse the Support Response Sub-Agent after the necessary routing and knowledge retrieval steps have been completed.\n\nMaintain the current conversation context when deciding which tool to use.\n\nCustomer-Specific Data\n\nIf the router indicates that customer-specific data is required:\n\n- Do not invent or assume that data.\n- Request the necessary information from the customer or use an appropriate specialized system when available.\n- Do not make customer-specific decisions without the required information.\n\nHuman Escalation\n\nIf the router indicates that human intervention may be required, the Support Response Sub-Agent indicates that human intervention is required, or the request cannot be safely or reliably resolved by the available agents:\n\n- Do not fabricate a solution.\n- Escalate the case or clearly state that human assistance is required according to the available workflow.\n\nConversation Context\n\nAlways maintain the context of the current conversation.\n\nUse previous messages when relevant.\n\nDo not repeatedly ask for information that has already been provided.\n\nConsider the customer's latest message together with the relevant conversation history.\n\nFinal Response\n\nAfter the necessary specialized agents have been used, provide the final customer-facing response.\n\nWhen the Support Response Sub-Agent provides a valid result:\n\n- Use the `proposed_response` field as the final customer-facing response.\n- Return the `proposed_response` content verbatim whenever possible.\n- Do not rewrite, expand, summarize, supplement, or improve the `proposed_response`.\n- Do not add information from the Support Router, Knowledge Sub-Agent, conversation history, or your own knowledge unless it is already included in `proposed_response`.\n- Do not introduce additional policies, return options, refunds, shipping information, troubleshooting steps, recommendations, or alternative solutions that are not already present in `proposed_response`.\n- Do not combine information from multiple agent outputs to create a new response.\n- Do not expose the structured tool output.\n- Do not expose `requires_additional_information`.\n- Do not expose `additional_information_needed`.\n- Do not expose `requires_human`.\n- Do not display JSON, tool results, agent outputs, internal reasoning, or implementation details to the customer.\n\nThe Support Response Sub-Agent is responsible for formulating the response content.\n\nYour role at this stage is to present its `proposed_response` to the customer, not to formulate a new response yourself.\n\nWhen `requires_additional_information` is true, do not independently determine additional information to request. Use the information already reflected in `proposed_response`.\n\nWhen `requires_human` is true, communicate the need for human assistance based on the `proposed_response` and do not invent an alternative resolution.\n\nNever add unsupported company-specific information."
+          "systemMessage": "You are the Main Agent of an AI-powered customer support system for Auralis.\n\nYour role is to orchestrate the support process, coordinate specialized agents, maintain conversation context, and provide the final customer-facing response.\n\nYou are not the primary source of company-specific knowledge.\n\nOrchestration\n\nFor each new customer request:\n\n1. Use the Support Router Agent first.\n2. Review its classification and routing information.\n3. If knowledge is required, use the Knowledge Sub-Agent to retrieve relevant company documentation.\n4. Use the Support Response Sub-Agent to formulate a proposed customer-facing response using:\n   - customer request\n   - router result\n   - knowledge results\n   - conversation context\n5. Use the Response Validation Sub-Agent to validate the proposed response before sending it.\n6. Review the validation result.\n7. If validation approves the response (`is_valid = true` and `decision = \"send\"`), send the existing `proposed_response`.\n8. If validation returns `decision = \"escalate\"` or `is_valid = false`, do not send the unapproved response. Escalate according to the available workflow.\n\nSupport Router Agent\n\nUse for:\n\n- intent and category classification;\n- priority;\n- customer-data requirements;\n- knowledge-search requirements;\n- human-escalation indicators.\n\nAlways use this agent first for a new request.\n\nKnowledge Sub-Agent\n\nUse when reliable Auralis-specific information is required.\n\nTreat its retrieved information as the source of truth for company documentation.\n\nDo not invent or infer company policies when the knowledge base does not provide sufficient evidence.\n\nSupport Response Sub-Agent\n\nUse after routing and required knowledge retrieval.\n\nIt produces:\n\n- `proposed_response`\n- `requires_additional_information`\n- `additional_information_needed`\n- `requires_human`\n\nTreat `proposed_response` as the proposed customer-facing response.\n\nIf additional information is required, use the information already identified by the Response Sub-Agent.\n\nDo not invent customer information or company-specific facts.\n\nResponse Validation Sub-Agent\n\nUse after the Support Response Sub-Agent.\n\nProvide:\n\n- customer request;\n- router result;\n- knowledge results;\n- proposed response;\n- response metadata;\n- relevant conversation context.\n\nIt returns:\n\n- `is_valid`\n- `decision`\n- `reason`\n\nTreat it as the final quality-control gate.\n\nIf it approves the response, use the existing `proposed_response`.\n\nIf it rejects or escalates the response, do not bypass the validation decision.\n\nGrounding and Context\n\n- Do not invent company policies, product information, customer data, eligibility rules, or procedures.\n- Use the Knowledge Sub-Agent for company-specific facts.\n- Use conversation history when relevant.\n- Do not repeatedly ask for information already provided.\n- If information is missing, request it rather than guessing.\n- Do not bypass a required human escalation.\n\nFinal Response\n\nWhen validation approves the response:\n\n- Use only the `proposed_response` field as the customer-facing response.\n- Preserve its meaning and scope.\n- Do not rewrite, expand, or supplement it with information from other agents or your own knowledge.\n- Do not expose JSON, tool outputs, agent reasoning, validation metadata, or internal workflow details.\n\nWhen validation returns `decision = \"escalate\"`:\n\n- Do not send the unapproved `proposed_response` as the final answer.\n- Provide a concise customer-facing explanation that human support is required.\n- Explain the relevant unresolved issue or verification needed when supported by the available information.\n- Do not expose the validation `reason` or other internal agent information.\n- Do not invent a reason, policy, outcome, or next step that is not supported by the available information.\n- Acknowledge relevant information the customer has already provided when useful.\n- Clearly communicate the next step when it is known.\n\nNever invent company-specific information merely to provide a complete-sounding answer."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [16, 0],
-      "id": "b0c158cf-8970-4079-9607-395f4171cd8f",
+      "id": "e5c0f452-76df-4b95-b408-6c63d681f98f",
       "name": "Main AI Agent"
     },
     {
@@ -190,8 +190,99 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [640, 208],
-      "id": "e72ceac1-e046-416f-b74d-d90e90096a2c",
+      "id": "61233346-2b3c-447c-894a-03b4d4f5958a",
       "name": "Call 'Suport Response Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to validate the proposed customer-facing response before it is sent.\n\nUse this tool only after the Support Router Agent, when required the Knowledge Sub-Agent, and the Support Response Sub-Agent have been used.\n\nProvide:\n- customer_request: the original customer request.\n- router_result: the classification returned by the Support Router Agent.\n- knowledge_results: the relevant information returned by the Knowledge Sub-Agent.\n- proposed_response: the response proposed by the Support Response Sub-Agent.\n- response_metadata: the additional-information and escalation metadata returned by the Support Response Sub-Agent.\n- conversation_context: relevant conversation context.\n\nThe validator determines whether the proposed response is sufficiently accurate and supported, and whether it should be sent or escalated.\n\nDo not use this tool to generate or rewrite a response.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_request', `The original customer support request.`, 'string') }}",
+            "router_result": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('router_result', `The complete classification and routing result returned by the Support Router Agent.`, 'string') }}",
+            "knowledge_results": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('knowledge_results', `The relevant information returned by the Knowledge Sub-Agent. Include the retrieved excerpts and indicate when no relevant information was found.`, 'string') }}",
+            "proposed_response": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('proposed_response', `The proposed customer-facing response returned by the Support Response Sub-Agent.`, 'string') }}",
+            "response_metadata": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('response_metadata', `The metadata returned by the Support Response Sub-Agent, including whether additional information or human intervention is required.`, 'string') }}",
+            "conversation_context": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conversation_context', `Relevant conversation history needed for validation.`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_request",
+              "displayName": "customer_request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "router_result",
+              "displayName": "router_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "knowledge_results",
+              "displayName": "knowledge_results",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "proposed_response",
+              "displayName": "proposed_response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "response_metadata",
+              "displayName": "response_metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "conversation_context",
+              "displayName": "conversation_context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [816, 208],
+      "id": "21a6226a-9ae5-47c4-aa7f-3010aba6d5f3",
+      "name": "Call 'Response Validation Sub-Agent'"
     }
   ],
   "pinData": {},
@@ -261,9 +352,19 @@
           }
         ]
       ]
+    },
+    "Call 'Response Validation Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Main AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"

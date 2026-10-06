@@ -1,0 +1,108 @@
+{
+  "name": "Human Escalation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_request"
+            },
+            {
+              "name": "proposed_response"
+            },
+            {
+              "name": "validation_reason"
+            },
+            {
+              "name": "conversation_context"
+            },
+            {
+              "name": "router_result"
+            },
+            {
+              "name": "response_metadata"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-112, 0],
+      "id": "fab939df-4bde-40ef-b7a3-39e06fb88fdd",
+      "name": "Human Escalation Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7fc4ded-4950-499c-a6e1-37b52a21e492",
+              "name": "escalation_message",
+              "value": "=🚨 CUSTOMER SUPPORT ESCALATION:\n\n*Customer Request:*\n{{ $json.customer_request }}\n\n*Reason for Escalation:*\n{{ $json.validation_reason }}\n\n*Proposed Response:*\n{{ $json.proposed_response }}\n\n*Conversation Context:*\n{{ $json.conversation_context }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [112, 0],
+      "id": "04eb02ad-3570-42fb-8e09-4684c574a8d7",
+      "name": "Build Escalation Message"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "customer-support-escalations"
+        },
+        "text": "={{ $json.escalation_message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [336, 0],
+      "id": "c10915a7-0d62-470b-a163-d563581757ec",
+      "name": "Send Escalation Message to Slack"
+    }
+  ],
+  "connections": {
+    "Build Escalation Message": {
+      "main": [
+        [
+          {
+            "node": "Send Escalation Message to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Escalation Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Escalation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

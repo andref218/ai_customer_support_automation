@@ -10,7 +10,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-176, 0],
-      "id": "6da0c26c-9dbe-4d30-88ef-3f0b5a57cb4e",
+      "id": "3c0ed422-3423-4ac4-8a11-b7ae5cddefb2",
       "name": "When chat message received"
     },
     {
@@ -29,7 +29,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-128, 208],
-      "id": "e07c5859-bbf9-4cfe-9337-91f6aa0b1ad5",
+      "id": "a087315e-be41-4068-98e9-928a9a818063",
       "name": "OpenAI Chat Model"
     },
     {
@@ -39,7 +39,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [32, 208],
-      "id": "f0c107cc-a82f-44ea-aef0-da53332d4c55",
+      "id": "b664e460-b476-4274-a345-15c40e889756",
       "name": "Simple Memory"
     },
     {
@@ -75,7 +75,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [304, 208],
-      "id": "e675b851-9b3d-4104-ba1a-182ef2661ff4",
+      "id": "8ab18f65-a5ab-4300-8bf0-2125b2548ac5",
       "name": "Call 'Support Router Agent'"
     },
     {
@@ -111,90 +111,21 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [480, 208],
-      "id": "3ffda3d1-754f-497e-bd11-43803fd1c1af",
+      "id": "06cbb63c-1e00-43b1-ab4a-33b9bef60ad6",
       "name": "Call 'Knowledge Sub-Agent'"
     },
     {
       "parameters": {
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are the Main Agent of an AI-powered customer support system for Auralis.\n\nYour role is to orchestrate the available specialized agents and return the structured result required by the workflow.\n\nYou are not the primary source of Auralis-specific knowledge.\n\nTOOL EXECUTION RULES\n\nFor each customer request, execute the support process in this order:\n\n1. Call the Support Router Agent.\n2. Based on the router result, call the Knowledge Sub-Agent when company-specific knowledge is required.\n3. Call the Support Response Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - conversation context\n4. Call the Response Validation Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - proposed response\n   - response metadata\n   - conversation context\n5. After receiving the Response Validation result, stop using tools and produce the final structured output.\n\nTool Usage Constraints\n\n- Call the Support Router Agent at most once per customer request.\n- Call the Knowledge Sub-Agent only when knowledge retrieval is required.\n- Call the Knowledge Sub-Agent at most once per customer request unless the tool explicitly returns an execution error.\n- Call the Support Response Sub-Agent exactly once after routing and required knowledge retrieval.\n- Call the Response Validation Sub-Agent exactly once after the Support Response Sub-Agent.\n- Do not call any tool again after the Response Validation Sub-Agent returns a result.\n- Do not call the Human Escalation Workflow.\n- Do not send messages directly to the customer.\n- Do not retry a tool because its result is incomplete, unexpected, or different from what you expected. Use the available result and continue according to the workflow rules.\n\nSUPPORT ROUTER AGENT\n\nUse it to determine:\n\n- intent and category;\n- priority;\n- customer-data requirements;\n- knowledge-search requirements;\n- human-escalation indicators.\n\nAlways call it first.\n\nKNOWLEDGE SUB-AGENT\n\nUse it when reliable Auralis-specific information is required.\n\nTreat its result as the source of truth for Auralis company documentation.\n\nDo not invent or infer company policies when the knowledge result does not provide sufficient evidence.\n\nSUPPORT RESPONSE SUB-AGENT\n\nUse it after routing and any required knowledge retrieval.\n\nIt returns:\n\n- proposed_response\n- requires_additional_information\n- additional_information_needed\n- requires_human\n\nTreat proposed_response as the proposed customer-facing response.\n\nDo not create a different response yourself before validation.\n\nRESPONSE VALIDATION SUB-AGENT\n\nUse it once, after the Support Response Sub-Agent.\n\nIt returns:\n\n- is_valid\n- decision\n- reason\n\nTreat its result as the final quality-control decision.\n\nDo not rewrite, improve, or re-evaluate the validation result yourself.\n\nDECISION RULES\n\nIf:\n\n- is_valid = true\n- decision = \"send\"\n\nthen:\n\n- set final decision to \"send\";\n- set customer_response to the existing proposed_response;\n- preserve the proposed_response without rewriting it.\n\nIf:\n\n- decision = \"escalate\"\n- OR is_valid = false\n\nthen:\n\n- set final decision to \"escalate\";\n- do not send the proposed_response to the customer;\n- set customer_response to a concise neutral message stating that human support is required.\n\nFor escalation, use a message such as:\n\n\"Human support is required to continue with this request. Your case has been escalated for review.\"\n\nDo not expose validation reasoning, tool outputs, internal workflow details, or agent reasoning to the customer.\n\nDATA PRESERVATION\n\nWhen producing the final structured output:\n\n- customer_request: preserve the original customer request.\n- proposed_response: preserve the Support Response Sub-Agent output.\n- validation_reason: preserve the Response Validation Sub-Agent reason.\n- conversation_context: preserve the relevant conversation context.\n- router_result: preserve the Support Router result.\n- response_metadata: preserve the Support Response metadata.\n\nDo not summarize, rewrite, or invent these fields.\n\nGROUNDING\n\n- Do not invent Auralis policies.\n- Do not invent product information.\n- Do not invent customer data.\n- Do not invent eligibility rules.\n- Do not invent procedures.\n- Do not use general knowledge to fill gaps in Auralis-specific information.\n- Use conversation history when relevant.\n- Do not ask again for information the customer has already provided.\n\nSTRUCTURED OUTPUT\n\nReturn only the fields defined by the structured output schema:\n\n- decision\n- customer_response\n- proposed_response\n- validation_reason\n- customer_request\n- conversation_context\n- router_result\n- response_metadata\n\nThe decision field must contain only:\n\n- \"send\"\n- \"escalate\"\n\nDo not output any text outside the structured output."
+          "systemMessage": "You are the Main Agent of an AI-powered customer support system for Auralis.\n\nYour role is to orchestrate the available specialized agents and return the structured result required by the workflow.\n\nYou are not the primary source of Auralis-specific knowledge.\n\nTOOL EXECUTION RULES\n\nFor each customer request, execute the support process in this order:\n\n1. Call the Support Router Agent.\n2. Based on the router result, call the Knowledge Sub-Agent when company-specific knowledge is required.\n3. Call the Support Response Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - conversation context\n4. Call the Response Validation Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - proposed response\n   - response metadata\n   - conversation context\n5. After receiving the Response Validation result, stop using tools and produce the final structured output.\n\nTool Usage Constraints\n\n- Call the Support Router Agent at most once per customer request.\n- Call the Knowledge Sub-Agent only when knowledge retrieval is required.\n- Call the Knowledge Sub-Agent at most once per customer request unless the tool explicitly returns an execution error.\n- Call the Support Response Sub-Agent exactly once after routing and required knowledge retrieval.\n- Call the Response Validation Sub-Agent exactly once after the Support Response Sub-Agent.\n- Do not call any tool again after the Response Validation Sub-Agent returns a result.\n- Do not call the Human Escalation Workflow.\n- Do not send messages directly to the customer.\n- Do not retry a tool because its result is incomplete, unexpected, or different from what you expected. Use the available result and continue according to the workflow rules.\n\nSUPPORT ROUTER AGENT\n\nUse it to determine:\n\n- intent and category;\n- priority;\n- customer-data requirements;\n- knowledge-search requirements;\n- human-escalation indicators.\n\nAlways call it first.\n\nKNOWLEDGE SUB-AGENT\n\nUse it when reliable Auralis-specific information is required.\n\nTreat its result as the source of truth for Auralis company documentation.\n\nDo not invent or infer company policies when the knowledge result does not provide sufficient evidence.\n\nSUPPORT RESPONSE SUB-AGENT\n\nUse it after routing and any required knowledge retrieval.\n\nIt returns:\n\n- proposed_response\n- requires_additional_information\n- additional_information_needed\n- requires_human\n\nTreat proposed_response as the proposed customer-facing response.\n\nDo not create a different response yourself before validation.\n\nRESPONSE VALIDATION SUB-AGENT\n\nUse it once, after the Support Response Sub-Agent.\n\nIt returns:\n\n- is_valid\n- decision\n- reason\n\nTreat its result as the final quality-control decision.\n\nDo not rewrite, improve, or re-evaluate the validation result yourself.\n\nDECISION RULES\n\nIf:\n\n- is_valid = true\n- decision = \"send\"\n\nthen:\n\n- set final decision to \"send\";\n- set customer_response to the existing proposed_response;\n- preserve the proposed_response without rewriting it.\n\nIf:\n\n- decision = \"escalate\"\n- OR is_valid = false\n\nthen:\n\n- set final decision to \"escalate\";\n- do not send the proposed_response to the customer.\n\nCUSTOMER IDENTITY FOR ESCALATION\n\nWhen the final decision is \"escalate\":\n\n- If customer_name is empty OR customer_email is empty:\n  - keep final decision as \"escalate\";\n  - do not treat the case as ready for human escalation yet;\n  - set customer_response to a concise message asking the customer to provide their name and email address.\n\nUse a message such as:\n\n\"Before I can escalate your case to human support, please provide your name and email address.\"\n\n- If customer_name and customer_email are both available:\n  - keep final decision as \"escalate\";\n  - set customer_response to a concise neutral message stating that human support is required.\n\nFor example:\n\n\"Human support is required to continue with this request. Your case has been escalated for review.\"\n\nDo not expose validation reasoning, tool outputs, internal workflow details, or agent reasoning to the customer.\n\nDo not invent or infer missing customer identity information.\n\nDATA PRESERVATION\n\nWhen producing the final structured output:\n\n- customer_request: preserve the current customer request exactly as received.\n- original_customer_request: preserve the original support request that initiated the current support case.\n- proposed_response: preserve the Support Response Sub-Agent output.\n- validation_reason: preserve the Response Validation Sub-Agent reason.\n- conversation_context: preserve the relevant conversation context.\n- router_result: preserve the Support Router result.\n- response_metadata: preserve the Support Response metadata.\n- customer_name: preserve the customer's name exactly as provided in the customer request or conversation context.\n- customer_email: preserve the customer's email address exactly as provided in the customer request or conversation context.\n\nThe original_customer_request must remain unchanged across the conversation.\n\nIf the current customer message only provides information requested by the support workflow, such as name or email, do not replace the original_customer_request with the current message.\n\nUse the previous conversation context to identify the support request that initiated the case.\n\nDo not summarize, rewrite, or invent these fields.\n\nFor customer_name and customer_email:\n\n- Do not invent, infer, modify, normalize, or guess customer information.\n- Use information already provided by the customer or present in the conversation context.\n- If the customer has not provided a value, return an empty string.\n\nGROUNDING\n\n- Do not invent Auralis policies.\n- Do not invent product information.\n- Do not invent customer data.\n- Do not invent eligibility rules.\n- Do not invent procedures.\n- Do not use general knowledge to fill gaps in Auralis-specific information.\n- Use conversation history when relevant.\n- Do not ask again for information the customer has already provided.\n- Do not assume a customer's identity from unrelated information.\n- Do not infer an email address from a name or other customer information.\n- Do not alter the customer's provided email address.\n- Do not replace the original support request with a later customer message that only provides identity or additional information.\n\nSTRUCTURED OUTPUT\n\nReturn only the fields defined by the structured output schema:\n\n- decision\n- customer_response\n- proposed_response\n- validation_reason\n- customer_request\n- original_customer_request\n- conversation_context\n- router_result\n- response_metadata\n- customer_name\n- customer_email\n\nThe decision field must contain only:\n\n- \"send\"\n- \"escalate\"\n\nFor original_customer_request:\n\n- preserve the original support request that initiated the case;\n- do not replace it with a later message containing only identity or additional information;\n- keep it unchanged across the conversation.\n\nFor customer_name and customer_email:\n\n- preserve the values provided by the customer;\n- do not invent or infer missing values;\n- return an empty string when the information is not available.\n\nDo not output any text outside the structured output."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [16, 0],
-      "id": "e083f006-656a-4c8f-8204-e90b7f6957bf",
+      "id": "5289082f-b0eb-4838-b71a-b8d4dee71a2a",
       "name": "Main AI Agent"
-    },
-    {
-      "parameters": {
-        "description": "Call this tool to formulate a proposed customer-facing response for a support request.\n\nUse this sub-agent after the Support Router Agent and, when required, the Knowledge Sub-Agent have been used.\n\nProvide:\n- customer_request: the customer's original request.\n- router_result: the classification and routing information returned by the Support Router Agent.\n- knowledge_results: the relevant information retrieved by the Knowledge Sub-Agent. If no knowledge search was required, provide the appropriate result or indicate that no knowledge search was performed.\n- conversation_context: relevant previous conversation context needed to formulate the response.\n\nThe sub-agent determines whether additional customer information is required and whether human intervention is necessary.\n\nIt does not perform knowledge retrieval itself and it does not send the final response to the customer.",
-        "workflowId": {
-          "__rl": true,
-          "mode": "list",
-          "cachedResultName": "Suport Response Sub-Agent"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "customer_request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_request', `The original customer request.\n\nPass the customer's request exactly as provided.\nDo not summarize, rewrite, infer, or modify it.`, 'string') }}",
-            "router_result": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('router_result', `The complete result returned by the Support Router Agent.\n\nPass the router result exactly as returned by the Support Router Agent.\nDo not summarize, rewrite, reinterpret, or omit fields.`, 'string') }}",
-            "knowledge_results": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('knowledge_results', `The complete information returned by the Knowledge Sub-Agent.\n\nPass the relevant knowledge result exactly as returned by the Knowledge Sub-Agent.\nDo not summarize, rewrite, reinterpret, or invent information.\nPreserve the retrieved evidence and source information.`, 'string') }}",
-            "conversation_context": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conversation_context', `Relevant conversation context for the current request.\n\nPass the available conversation context as provided.\nDo not invent previous messages.\nIf no relevant context exists, pass: \"No prior conversation context.\"`, 'string') }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "customer_request",
-              "displayName": "customer_request",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "router_result",
-              "displayName": "router_result",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "knowledge_results",
-              "displayName": "knowledge_results",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "conversation_context",
-              "displayName": "conversation_context",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [640, 208],
-      "id": "9962df79-90f2-4643-b432-31db5b324ea1",
-      "name": "Call 'Suport Response Sub-Agent'"
     },
     {
       "parameters": {
@@ -284,18 +215,18 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [816, 208],
-      "id": "7b3e0b24-2f65-4a2f-a55a-a4406b5b1491",
+      "id": "81fbf098-b296-4dde-b7b3-5b18901998e6",
       "name": "Call 'Response Validation Sub-Agent'"
     },
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision\": {\n      \"type\": \"string\",\n      \"enum\": [\"send\", \"escalate\"]\n    },\n    \"customer_response\": {\n      \"type\": \"string\"\n    },\n    \"proposed_response\": {\n      \"type\": \"string\"\n    },\n    \"validation_reason\": {\n      \"type\": \"string\"\n    },\n    \"customer_request\": {\n      \"type\": \"string\"\n    },\n    \"conversation_context\": {\n      \"type\": \"string\"\n    },\n    \"router_result\": {\n      \"type\": \"string\"\n    },\n    \"response_metadata\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"decision\",\n    \"customer_response\",\n    \"proposed_response\",\n    \"validation_reason\",\n    \"customer_request\",\n    \"conversation_context\",\n    \"router_result\",\n    \"response_metadata\"\n  ]\n}"
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"decision\": {\n      \"type\": \"string\",\n      \"enum\": [\"send\", \"escalate\"]\n    },\n    \"customer_response\": {\n      \"type\": \"string\"\n    },\n    \"proposed_response\": {\n      \"type\": \"string\"\n    },\n    \"validation_reason\": {\n      \"type\": \"string\"\n    },\n    \"customer_request\": {\n      \"type\": \"string\"\n    },\n    \"original_customer_request\": {\n      \"type\": \"string\"\n    },\n    \"conversation_context\": {\n      \"type\": \"string\"\n    },\n    \"router_result\": {\n      \"type\": \"string\"\n    },\n    \"response_metadata\": {\n      \"type\": \"string\"\n    },\n    \"customer_name\": {\n      \"type\": \"string\"\n    },\n    \"customer_email\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"decision\",\n    \"customer_response\",\n    \"proposed_response\",\n    \"validation_reason\",\n    \"customer_request\",\n    \"original_customer_request\",\n    \"conversation_context\",\n    \"router_result\",\n    \"response_metadata\",\n    \"customer_name\",\n    \"customer_email\"\n  ]\n}"
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [256, -128],
-      "id": "f021fdbb-1482-4b18-aef0-36c7c68719dd",
+      "id": "83ede5f9-fdba-4208-891a-e52505a24133",
       "name": "Structured Output Parser"
     },
     {
@@ -317,6 +248,26 @@
                 "operation": "equals",
                 "name": "filter.operator.equals"
               }
+            },
+            {
+              "id": "db2852ed-f265-449d-a313-09423907fafc",
+              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a14ef6ef-796a-4b0e-a4ca-34d681ec50c5",
+              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -326,7 +277,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [496, -64],
-      "id": "32cf420b-7f96-4b61-8863-dc4d372e6cc4",
+      "id": "57409cde-7520-44ca-a1bc-351b0ff858e1",
       "name": "If - Check Escalation Decision"
     },
     {
@@ -344,7 +295,10 @@
             "validation_reason": "={{ $('Main AI Agent').item.json.output.validation_reason }}",
             "conversation_context": "={{ $('Main AI Agent').item.json.output.conversation_context }}",
             "router_result": "={{ $('Main AI Agent').item.json.output.router_result }}",
-            "response_metadata": "={{ $('Main AI Agent').item.json.output.response_metadata }}"
+            "response_metadata": "={{ $('Main AI Agent').item.json.output.response_metadata }}",
+            "customer_name": "={{ $('Main AI Agent').item.json.output.customer_name }}",
+            "customer_email": "={{ $('Main AI Agent').item.json.output.customer_email }}",
+            "original_customer_request": "={{ $('Main AI Agent').item.json.output.original_customer_request }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -407,6 +361,36 @@
               "canBeUsedToMatch": true,
               "type": "string",
               "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "original_customer_request",
+              "displayName": "original_customer_request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -417,18 +401,18 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [800, -192],
-      "id": "c2a75f66-42a6-4b1f-a7b5-b15a18a4e974",
+      "id": "8d020452-6e70-475d-a264-c07902e29aa9",
       "name": "Call 'Human Escalation Workflow'"
     },
     {
       "parameters": {
-        "message": "={{ $('Main AI Agent').item.json.output.customer_response }}",
+        "message": "=Your request has been escalated to human support.\n\nTicket number: #{{ $json.ticket_number }}\n\nWe’ll use {{ $json.customer_email }} for follow-up. Our support team will review your case and contact you regarding the next steps.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [1008, -192],
-      "id": "3eee0191-9372-45fb-97a2-eeb4f741a802",
+      "id": "4cd6a3d2-afcb-495c-9e62-bc4b9278f713",
       "name": "Send Escalation Notice"
     },
     {
@@ -439,8 +423,77 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [800, 0],
-      "id": "c79a0eb8-cf04-425b-8a1a-179950d9b95e",
+      "id": "9f6e2ad3-3f83-426d-9671-569ab0682243",
       "name": "Send Customer Response"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to formulate a proposed customer-facing response for a support request.\n\nUse this sub-agent after the Support Router Agent and, when required, the Knowledge Sub-Agent have been used.\n\nProvide:\n- customer_request: the customer's original request.\n- router_result: the classification and routing information returned by the Support Router Agent.\n- knowledge_results: the relevant information retrieved by the Knowledge Sub-Agent. If no knowledge search was required, provide the appropriate result or indicate that no knowledge search was performed.\n- conversation_context: relevant previous conversation context needed to formulate the response.\n\nThe sub-agent determines whether additional customer information is required and whether human intervention is necessary.\n\nIt does not perform knowledge retrieval itself and it does not send the final response to the customer.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "cachedResultName": "Suport Response Sub-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_request', `The original customer request.\n\nPass the customer's request exactly as provided.\nDo not summarize, rewrite, infer, or modify it.`, 'string') }}",
+            "router_result": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('router_result', `The complete result returned by the Support Router Agent.\n\nPass the router result exactly as returned by the Support Router Agent.\nDo not summarize, rewrite, reinterpret, or omit fields.`, 'string') }}",
+            "knowledge_results": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('knowledge_results', `The complete information returned by the Knowledge Sub-Agent.\n\nPass the relevant knowledge result exactly as returned by the Knowledge Sub-Agent.\nDo not summarize, rewrite, reinterpret, or invent information.\nPreserve the retrieved evidence and source information.`, 'string') }}",
+            "conversation_context": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conversation_context', `Relevant conversation context for the current request.\n\nPass the available conversation context as provided.\nDo not invent previous messages.\nIf no relevant context exists, pass: \"No prior conversation context.\"`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_request",
+              "displayName": "customer_request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "router_result",
+              "displayName": "router_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "knowledge_results",
+              "displayName": "knowledge_results",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "conversation_context",
+              "displayName": "conversation_context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [640, 208],
+      "id": "2db445d4-91a5-430d-a8da-29a176536506",
+      "name": "Call 'Support Response Sub-Agent'"
     }
   ],
   "connections": {
@@ -489,17 +542,6 @@
       ]
     },
     "Call 'Knowledge Sub-Agent'": {
-      "ai_tool": [
-        [
-          {
-            "node": "Main AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call 'Suport Response Sub-Agent'": {
       "ai_tool": [
         [
           {
@@ -567,6 +609,17 @@
           {
             "node": "Send Escalation Notice",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Support Response Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Main AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]

@@ -22,6 +22,15 @@
             },
             {
               "name": "response_metadata"
+            },
+            {
+              "name": "customer_name"
+            },
+            {
+              "name": "customer_email"
+            },
+            {
+              "name": "original_customer_request"
             }
           ]
         }
@@ -29,17 +38,17 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.2,
       "position": [-112, 0],
-      "id": "fab939df-4bde-40ef-b7a3-39e06fb88fdd",
-      "name": "Human Escalation Trigger"
+      "id": "8b6915ee-903e-49b8-8802-7e4ae27c9dfe",
+      "name": "When Executed by Another Workflow"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "e7fc4ded-4950-499c-a6e1-37b52a21e492",
+              "id": "8da689c5-2b37-4f0e-a17c-4d99b38c7994",
               "name": "escalation_message",
-              "value": "=🚨 CUSTOMER SUPPORT ESCALATION:\n\n*Customer Request:*\n{{ $json.customer_request }}\n\n*Reason for Escalation:*\n{{ $json.validation_reason }}\n\n*Proposed Response:*\n{{ $json.proposed_response }}\n\n*Conversation Context:*\n{{ $json.conversation_context }}",
+              "value": "=🚨 NEW CUSTOMER SUPPORT TICKET:\n\n*Ticket:*\n#{{ $json.ticket_number }}\n\n*Customer:*\n{{ $('When Executed by Another Workflow').item.json.customer_name }}\n\n*Email:*\n{{ $('When Executed by Another Workflow').item.json.customer_email }}\n\n*Customer Request:*\n{{ $json.customer_request }}\n\n*Category:*\n{{ $json.category }}\n\n*Priority:*\n{{ $json.priority }}\n\n*Status:*\n{{ $json.status }}\n\n*Reason for Escalation:*\n{{ $('When Executed by Another Workflow').item.json.validation_reason }}\n\n*Proposed Response:*\n{{ $('When Executed by Another Workflow').item.json.proposed_response }}\n\n*Conversation Context:*\n{{ $('When Executed by Another Workflow').item.json.conversation_context }}",
               "type": "string"
             }
           ]
@@ -48,8 +57,8 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
-      "position": [112, 0],
-      "id": "04eb02ad-3570-42fb-8e09-4684c574a8d7",
+      "position": [560, 0],
+      "id": "caf6751d-111f-4aa9-a6a4-5b3ba8075153",
       "name": "Build Escalation Message"
     },
     {
@@ -58,7 +67,7 @@
         "select": "channel",
         "channelId": {
           "__rl": true,
-          "value": "",
+          "value": "__REPLACE_WITH_SLACK_CHANNEL_ID__",
           "mode": "list",
           "cachedResultName": "customer-support-escalations"
         },
@@ -69,12 +78,90 @@
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.7,
-      "position": [336, 0],
-      "id": "c10915a7-0d62-470b-a163-d563581757ec",
+      "position": [784, 0],
+      "id": "460d1708-359f-4f04-aaa6-27bc5d7223dd",
       "name": "Send Escalation Message to Slack"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO customers (name, email)\nVALUES ($1, $2)\nON CONFLICT (email)\nDO UPDATE SET name = EXCLUDED.name\nRETURNING id, name, email, created_at;",
+        "options": {
+          "queryReplacement": "={{ $json.customer_name }},{{ $json.customer_email }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [112, 0],
+      "id": "418931ad-dd2d-4856-83c6-29ea178b4d4b",
+      "name": "Find/Create Customer"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO support_tickets (\n  ticket_number,\n  customer_id,\n  customer_request,\n  category,\n  priority,\n  proposed_response,\n  validation_reason,\n  status\n)\nVALUES (\n  'AUR-' || LPAD(\n    nextval('support_ticket_number_seq')::text,\n    4,\n    '0'\n  ),\n  $1,\n  $2,\n  $3,\n  $4,\n  $5,\n  $6,\n  'open'\n)\nRETURNING\n  id,\n  ticket_number,\n  customer_id,\n  customer_request,\n  category,\n  priority,\n  status,\n  created_at;",
+        "options": {
+          "queryReplacement": "={{ $json.id }},\n{{ $('When Executed by Another Workflow').item.json.original_customer_request }},\n{{ JSON.parse($('When Executed by Another Workflow').item.json.router_result)[0].output.category }},\n{{ JSON.parse($('When Executed by Another Workflow').item.json.router_result)[0].output.priority }},\n{{ $('When Executed by Another Workflow').item.json.proposed_response }},\n{{ $('When Executed by Another Workflow').item.json.validation_reason }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [336, 0],
+      "id": "7db91d46-4dd1-4840-a7ef-381c3e76e30d",
+      "name": "Create Support Ticket"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7cd89dcd-bec2-46bb-b6f2-95fa76a3615f",
+              "name": "ticket_number",
+              "value": "={{ $('Create Support Ticket').item.json.ticket_number }}",
+              "type": "string"
+            },
+            {
+              "id": "435fff90-5119-4f17-bee0-c48118d8586a",
+              "name": "customer_name",
+              "value": "={{ $('When Executed by Another Workflow').item.json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0f8ebed7-63a5-41d5-9df0-f6513f97e5fe",
+              "name": "customer_email",
+              "value": "={{ $('When Executed by Another Workflow').item.json.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "4ab472c2-cb36-4c64-a261-953e95cbffed",
+              "name": "status",
+              "value": "={{ $('Create Support Ticket').item.json.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [1008, 0],
+      "id": "44059f4b-b8dd-48bc-b0bb-f699a40c5c7b",
+      "name": "Return Ticket Data"
     }
   ],
+  "pinData": {},
   "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Find/Create Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Build Escalation Message": {
       "main": [
         [
@@ -86,7 +173,18 @@
         ]
       ]
     },
-    "Human Escalation Trigger": {
+    "Find/Create Customer": {
+      "main": [
+        [
+          {
+            "node": "Create Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Support Ticket": {
       "main": [
         [
           {
@@ -96,9 +194,20 @@
           }
         ]
       ]
+    },
+    "Send Escalation Message to Slack": {
+      "main": [
+        [
+          {
+            "node": "Return Ticket Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"

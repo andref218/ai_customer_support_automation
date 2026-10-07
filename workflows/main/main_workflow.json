@@ -10,7 +10,7 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-176, 0],
-      "id": "3c0ed422-3423-4ac4-8a11-b7ae5cddefb2",
+      "id": "ecb50180-e2f2-4a79-93d4-97c44b79d7dc",
       "name": "When chat message received"
     },
     {
@@ -29,7 +29,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-128, 208],
-      "id": "a087315e-be41-4068-98e9-928a9a818063",
+      "id": "84ff7c70-8a85-452e-951e-cc7efa15f3cf",
       "name": "OpenAI Chat Model"
     },
     {
@@ -39,7 +39,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [32, 208],
-      "id": "b664e460-b476-4274-a345-15c40e889756",
+      "id": "aa439c59-039f-4d4e-bd8a-5f8d0d71ad26",
       "name": "Simple Memory"
     },
     {
@@ -47,7 +47,9 @@
         "description": "Classifies and structures an incoming customer support request. Use this tool to identify the customer's intent, category, priority, required customer data, whether the knowledge base should be consulted, whether human intervention may be required, and any additional information needed.",
         "workflowId": {
           "__rl": true,
+          "value": "__REPLACE_WITH_WORKFLOW_ID__",
           "mode": "list",
+          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
           "cachedResultName": "Support Router Sub-Agent"
         },
         "workflowInputs": {
@@ -75,7 +77,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [304, 208],
-      "id": "8ab18f65-a5ab-4300-8bf0-2125b2548ac5",
+      "id": "4d4b44d5-63c7-403e-ab3d-62eef847b516",
       "name": "Call 'Support Router Agent'"
     },
     {
@@ -83,7 +85,9 @@
         "description": "Search the company knowledge base for information relevant to the customer's support request. Use this tool when factual information from company documentation is needed, such as warranty, returns, refunds, shipping, product information, or troubleshooting. The tool returns relevant document excerpts and their sources.",
         "workflowId": {
           "__rl": true,
+          "value": "__REPLACE_WITH_WORKFLOW_ID__",
           "mode": "list",
+          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
           "cachedResultName": "Knowledge Sub-Agent"
         },
         "workflowInputs": {
@@ -111,7 +115,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [480, 208],
-      "id": "06cbb63c-1e00-43b1-ab4a-33b9bef60ad6",
+      "id": "d00502be-5a36-4b83-a9ba-47053fa3bf3c",
       "name": "Call 'Knowledge Sub-Agent'"
     },
     {
@@ -124,7 +128,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [16, 0],
-      "id": "5289082f-b0eb-4838-b71a-b8d4dee71a2a",
+      "id": "1e594084-ed4a-4915-b49d-6ca5bf855315",
       "name": "Main AI Agent"
     },
     {
@@ -132,7 +136,9 @@
         "description": "Call this tool to validate the proposed customer-facing response before it is sent.\n\nUse this tool only after the Support Router Agent, when required the Knowledge Sub-Agent, and the Support Response Sub-Agent have been used.\n\nProvide:\n- customer_request: the original customer request.\n- router_result: the classification returned by the Support Router Agent.\n- knowledge_results: the relevant information returned by the Knowledge Sub-Agent.\n- proposed_response: the response proposed by the Support Response Sub-Agent.\n- response_metadata: the additional-information and escalation metadata returned by the Support Response Sub-Agent.\n- conversation_context: relevant conversation context.\n\nThe validator determines whether the proposed response is sufficiently accurate and supported, and whether it should be sent or escalated.\n\nDo not use this tool to generate or rewrite a response.",
         "workflowId": {
           "__rl": true,
+          "value": "__REPLACE_WITH_WORKFLOW_ID__",
           "mode": "list",
+          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
           "cachedResultName": "Response Validation Sub-Agent"
         },
         "workflowInputs": {
@@ -215,7 +221,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [816, 208],
-      "id": "81fbf098-b296-4dde-b7b3-5b18901998e6",
+      "id": "4ff32251-344a-4dd2-930e-0d407e662974",
       "name": "Call 'Response Validation Sub-Agent'"
     },
     {
@@ -226,7 +232,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [256, -128],
-      "id": "83ede5f9-fdba-4208-891a-e52505a24133",
+      "id": "99c9a4cf-f3e0-4b36-95f9-a632c7a0771c",
       "name": "Structured Output Parser"
     },
     {
@@ -277,14 +283,16 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [496, -64],
-      "id": "57409cde-7520-44ca-a1bc-351b0ff858e1",
+      "id": "e5adf7d9-a079-4c56-9a89-195abefe87cf",
       "name": "If - Check Escalation Decision"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
+          "value": "__REPLACE_WITH_WORKFLOW_ID__",
           "mode": "list",
+          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
           "cachedResultName": "Human Escalation Workflow"
         },
         "workflowInputs": {
@@ -401,7 +409,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [800, -192],
-      "id": "8d020452-6e70-475d-a264-c07902e29aa9",
+      "id": "0cb961b1-7d0a-4d31-9b5e-8997c90abd5c",
       "name": "Call 'Human Escalation Workflow'"
     },
     {
@@ -412,7 +420,7 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [1008, -192],
-      "id": "4cd6a3d2-afcb-495c-9e62-bc4b9278f713",
+      "id": "5a5c9fa2-401b-480a-9112-9838bc400811",
       "name": "Send Escalation Notice"
     },
     {
@@ -423,7 +431,7 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [800, 0],
-      "id": "9f6e2ad3-3f83-426d-9671-569ab0682243",
+      "id": "34493a75-2769-4b55-9737-cb8ec60dbdd7",
       "name": "Send Customer Response"
     },
     {
@@ -431,7 +439,9 @@
         "description": "Call this tool to formulate a proposed customer-facing response for a support request.\n\nUse this sub-agent after the Support Router Agent and, when required, the Knowledge Sub-Agent have been used.\n\nProvide:\n- customer_request: the customer's original request.\n- router_result: the classification and routing information returned by the Support Router Agent.\n- knowledge_results: the relevant information retrieved by the Knowledge Sub-Agent. If no knowledge search was required, provide the appropriate result or indicate that no knowledge search was performed.\n- conversation_context: relevant previous conversation context needed to formulate the response.\n\nThe sub-agent determines whether additional customer information is required and whether human intervention is necessary.\n\nIt does not perform knowledge retrieval itself and it does not send the final response to the customer.",
         "workflowId": {
           "__rl": true,
+          "value": "__REPLACE_WITH_WORKFLOW_ID__",
           "mode": "list",
+          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
           "cachedResultName": "Suport Response Sub-Agent"
         },
         "workflowInputs": {
@@ -492,10 +502,11 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [640, 208],
-      "id": "2db445d4-91a5-430d-a8da-29a176536506",
+      "id": "745b0b92-104e-4ed5-8daa-f568858bc26b",
       "name": "Call 'Support Response Sub-Agent'"
     }
   ],
+  "pinData": {},
   "connections": {
     "When chat message received": {
       "main": [
@@ -629,7 +640,11 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "__REPLACE_WITH_ERROR_HANDLER_WORKFLOW_ID__",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "nodeGroups": [],
   "tags": []

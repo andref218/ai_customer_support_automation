@@ -38,7 +38,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.2,
       "position": [-112, 0],
-      "id": "8b6915ee-903e-49b8-8802-7e4ae27c9dfe",
+      "id": "1dba50f0-23bc-4ece-b430-385d4ab5696c",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -46,7 +46,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "8da689c5-2b37-4f0e-a17c-4d99b38c7994",
+              "id": "5b1c7a42-2eb0-4683-99f3-2bb3dfff58eb",
               "name": "escalation_message",
               "value": "=🚨 NEW CUSTOMER SUPPORT TICKET:\n\n*Ticket:*\n#{{ $json.ticket_number }}\n\n*Customer:*\n{{ $('When Executed by Another Workflow').item.json.customer_name }}\n\n*Email:*\n{{ $('When Executed by Another Workflow').item.json.customer_email }}\n\n*Customer Request:*\n{{ $json.customer_request }}\n\n*Category:*\n{{ $json.category }}\n\n*Priority:*\n{{ $json.priority }}\n\n*Status:*\n{{ $json.status }}\n\n*Reason for Escalation:*\n{{ $('When Executed by Another Workflow').item.json.validation_reason }}\n\n*Proposed Response:*\n{{ $('When Executed by Another Workflow').item.json.proposed_response }}\n\n*Conversation Context:*\n{{ $('When Executed by Another Workflow').item.json.conversation_context }}",
               "type": "string"
@@ -58,7 +58,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [560, 0],
-      "id": "caf6751d-111f-4aa9-a6a4-5b3ba8075153",
+      "id": "020a7013-f5a3-4ba9-afd3-de149f2fa9df",
       "name": "Build Escalation Message"
     },
     {
@@ -79,7 +79,7 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.7,
       "position": [784, 0],
-      "id": "460d1708-359f-4f04-aaa6-27bc5d7223dd",
+      "id": "a53cd75b-e374-4a5d-be35-6a33385c8095",
       "name": "Send Escalation Message to Slack"
     },
     {
@@ -93,7 +93,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [112, 0],
-      "id": "418931ad-dd2d-4856-83c6-29ea178b4d4b",
+      "id": "c05ea21e-277c-46c7-b293-d8ede9ce9572",
       "name": "Find/Create Customer"
     },
     {
@@ -107,7 +107,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [336, 0],
-      "id": "7db91d46-4dd1-4840-a7ef-381c3e76e30d",
+      "id": "fa9d1073-947d-48ae-91ba-3a5ab47878c7",
       "name": "Create Support Ticket"
     },
     {
@@ -115,25 +115,25 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7cd89dcd-bec2-46bb-b6f2-95fa76a3615f",
+              "id": "fa0fcc77-0853-46e5-a0aa-89dfa4bc2e56",
               "name": "ticket_number",
               "value": "={{ $('Create Support Ticket').item.json.ticket_number }}",
               "type": "string"
             },
             {
-              "id": "435fff90-5119-4f17-bee0-c48118d8586a",
+              "id": "5ac96a8d-1b6c-4427-9650-b776215d5504",
               "name": "customer_name",
               "value": "={{ $('When Executed by Another Workflow').item.json.customer_name }}",
               "type": "string"
             },
             {
-              "id": "0f8ebed7-63a5-41d5-9df0-f6513f97e5fe",
+              "id": "26bd2fc5-7634-4075-b7ba-ef6ce1eaf52c",
               "name": "customer_email",
               "value": "={{ $('When Executed by Another Workflow').item.json.customer_email }}",
               "type": "string"
             },
             {
-              "id": "4ab472c2-cb36-4c64-a261-953e95cbffed",
+              "id": "21736a34-22a8-4535-a718-031c146109da",
               "name": "status",
               "value": "={{ $('Create Support Ticket').item.json.status }}",
               "type": "string"
@@ -145,7 +145,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [1008, 0],
-      "id": "44059f4b-b8dd-48bc-b0bb-f699a40c5c7b",
+      "id": "1ab95afa-ba0e-4a16-9aa7-14195b3bcd92",
       "name": "Return Ticket Data"
     }
   ],
@@ -210,8 +210,16 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "__REPLACE_WITH_ERROR_HANDLER_WORKFLOW_ID__",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
+  "id": "855618a2-9268-4a95-91cd-a8677289c58b",
   "tags": []
 }

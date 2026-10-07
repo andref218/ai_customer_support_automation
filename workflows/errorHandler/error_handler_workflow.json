@@ -1,0 +1,104 @@
+{
+  "name": "Error Handler Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-48, 0],
+      "id": "dc582992-b49f-4a14-8a00-7d56b24f326b",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4fc15bc8-c223-4190-9953-062055add43d",
+              "name": "error_message",
+              "value": "={{ $json.execution?.error?.message || 'Unknown error' }}",
+              "type": "string"
+            },
+            {
+              "id": "6869c1df-7a09-4f8e-a63d-7a0ab30a0292",
+              "name": "failed_node",
+              "value": "={{ $json.execution?.lastNodeExecuted || 'Unknown node' }}",
+              "type": "string"
+            },
+            {
+              "id": "91828d47-1803-4baf-8c41-8378b9d340c6",
+              "name": "workflow_name",
+              "value": "={{ $json.workflow?.name || 'Unknown workflow' }}",
+              "type": "string"
+            },
+            {
+              "id": "dc6ec6b6-94d3-40dd-807c-7368d50eda94",
+              "name": "execution_id",
+              "value": "={{ $json.execution?.id || 'Unknown execution' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [176, 0],
+      "id": "a7a97ead-ac6f-4560-9660-384a77b5b7f7",
+      "name": "Build Error Context"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "__REPLACE_WITH_SLACK_CHANNEL_ID__",
+          "mode": "list",
+          "cachedResultName": "error-alerts"
+        },
+        "text": "=🚨 WORKFLOW ERROR:\n\n*Workflow:*\n{{ $json.workflow_name }}\n\n*Node:*\n{{ $json.failed_node }}\n\n*Error:*\n{{ $json.error_message }}\n\n*Execution ID:*\n{{ $json.execution_id }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [400, 0],
+      "id": "a406a836-5354-4e4a-ba67-7a575bc20c82",
+      "name": "Send Error Alert"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Error Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Error Context": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

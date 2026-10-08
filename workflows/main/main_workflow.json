@@ -3,14 +3,12 @@
   "nodes": [
     {
       "parameters": {
-        "options": {
-          "responseMode": "responseNodes"
-        }
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
-      "position": [-176, 0],
-      "id": "ecb50180-e2f2-4a79-93d4-97c44b79d7dc",
+      "position": [-560, 0],
+      "id": "ce18b969-f079-4f64-b7f3-b2483092f5cc",
       "name": "When chat message received"
     },
     {
@@ -28,8 +26,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [-128, 208],
-      "id": "84ff7c70-8a85-452e-951e-cc7efa15f3cf",
+      "position": [112, 432],
+      "id": "dc9c36f6-abca-4fab-874e-ca33afad9661",
       "name": "OpenAI Chat Model"
     },
     {
@@ -38,8 +36,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
-      "position": [32, 208],
-      "id": "aa439c59-039f-4d4e-bd8a-5f8d0d71ad26",
+      "position": [272, 432],
+      "id": "36b011a9-228d-426f-87f3-be8f3af151b0",
       "name": "Simple Memory"
     },
     {
@@ -47,9 +45,9 @@
         "description": "Classifies and structures an incoming customer support request. Use this tool to identify the customer's intent, category, priority, required customer data, whether the knowledge base should be consulted, whether human intervention may be required, and any additional information needed.",
         "workflowId": {
           "__rl": true,
-          "value": "__REPLACE_WITH_WORKFLOW_ID__",
+          "value": "__REPLACE_WITH_SUPPORT_ROUTER_WORKFLOW_ID__",
           "mode": "list",
-          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_SUPPORT_ROUTER_WORKFLOW_ID__",
           "cachedResultName": "Support Router Sub-Agent"
         },
         "workflowInputs": {
@@ -76,8 +74,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [304, 208],
-      "id": "4d4b44d5-63c7-403e-ab3d-62eef847b516",
+      "position": [512, 432],
+      "id": "e32f1b0a-31ac-4875-bd57-fdec92c62430",
       "name": "Call 'Support Router Agent'"
     },
     {
@@ -85,9 +83,9 @@
         "description": "Search the company knowledge base for information relevant to the customer's support request. Use this tool when factual information from company documentation is needed, such as warranty, returns, refunds, shipping, product information, or troubleshooting. The tool returns relevant document excerpts and their sources.",
         "workflowId": {
           "__rl": true,
-          "value": "__REPLACE_WITH_WORKFLOW_ID__",
+          "value": "__REPLACE_WITH_KNOWLEDGE_SUB_AGENT_WORKFLOW_ID__",
           "mode": "list",
-          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_KNOWLEDGE_SUB_AGENT_WORKFLOW_ID__",
           "cachedResultName": "Knowledge Sub-Agent"
         },
         "workflowInputs": {
@@ -114,12 +112,14 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [480, 208],
-      "id": "d00502be-5a36-4b83-a9ba-47053fa3bf3c",
+      "position": [688, 432],
+      "id": "907c20eb-ef86-4353-ab06-332dbcc6bb19",
       "name": "Call 'Knowledge Sub-Agent'"
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').first().json.chatInput }}",
         "hasOutputParser": true,
         "options": {
           "systemMessage": "You are the Main Agent of an AI-powered customer support system for Auralis.\n\nYour role is to orchestrate the available specialized agents and return the structured result required by the workflow.\n\nYou are not the primary source of Auralis-specific knowledge.\n\nTOOL EXECUTION RULES\n\nFor each customer request, execute the support process in this order:\n\n1. Call the Support Router Agent.\n2. Based on the router result, call the Knowledge Sub-Agent when company-specific knowledge is required.\n3. Call the Support Response Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - conversation context\n4. Call the Response Validation Sub-Agent using:\n   - customer request\n   - router result\n   - knowledge results\n   - proposed response\n   - response metadata\n   - conversation context\n5. After receiving the Response Validation result, stop using tools and produce the final structured output.\n\nTool Usage Constraints\n\n- Call the Support Router Agent at most once per customer request.\n- Call the Knowledge Sub-Agent only when knowledge retrieval is required.\n- Call the Knowledge Sub-Agent at most once per customer request unless the tool explicitly returns an execution error.\n- Call the Support Response Sub-Agent exactly once after routing and required knowledge retrieval.\n- Call the Response Validation Sub-Agent exactly once after the Support Response Sub-Agent.\n- Do not call any tool again after the Response Validation Sub-Agent returns a result.\n- Do not call the Human Escalation Workflow.\n- Do not send messages directly to the customer.\n- Do not retry a tool because its result is incomplete, unexpected, or different from what you expected. Use the available result and continue according to the workflow rules.\n\nSUPPORT ROUTER AGENT\n\nUse it to determine:\n\n- intent and category;\n- priority;\n- customer-data requirements;\n- knowledge-search requirements;\n- human-escalation indicators.\n\nAlways call it first.\n\nKNOWLEDGE SUB-AGENT\n\nUse it when reliable Auralis-specific information is required.\n\nTreat its result as the source of truth for Auralis company documentation.\n\nDo not invent or infer company policies when the knowledge result does not provide sufficient evidence.\n\nSUPPORT RESPONSE SUB-AGENT\n\nUse it after routing and any required knowledge retrieval.\n\nIt returns:\n\n- proposed_response\n- requires_additional_information\n- additional_information_needed\n- requires_human\n\nTreat proposed_response as the proposed customer-facing response.\n\nDo not create a different response yourself before validation.\n\nRESPONSE VALIDATION SUB-AGENT\n\nUse it once, after the Support Response Sub-Agent.\n\nIt returns:\n\n- is_valid\n- decision\n- reason\n\nTreat its result as the final quality-control decision.\n\nDo not rewrite, improve, or re-evaluate the validation result yourself.\n\nDECISION RULES\n\nIf:\n\n- is_valid = true\n- decision = \"send\"\n\nthen:\n\n- set final decision to \"send\";\n- set customer_response to the existing proposed_response;\n- preserve the proposed_response without rewriting it.\n\nIf:\n\n- decision = \"escalate\"\n- OR is_valid = false\n\nthen:\n\n- set final decision to \"escalate\";\n- do not send the proposed_response to the customer.\n\nCUSTOMER IDENTITY FOR ESCALATION\n\nWhen the final decision is \"escalate\":\n\n- If customer_name is empty OR customer_email is empty:\n  - keep final decision as \"escalate\";\n  - do not treat the case as ready for human escalation yet;\n  - set customer_response to a concise message asking the customer to provide their name and email address.\n\nUse a message such as:\n\n\"Before I can escalate your case to human support, please provide your name and email address.\"\n\n- If customer_name and customer_email are both available:\n  - keep final decision as \"escalate\";\n  - set customer_response to a concise neutral message stating that human support is required.\n\nFor example:\n\n\"Human support is required to continue with this request. Your case has been escalated for review.\"\n\nDo not expose validation reasoning, tool outputs, internal workflow details, or agent reasoning to the customer.\n\nDo not invent or infer missing customer identity information.\n\nDATA PRESERVATION\n\nWhen producing the final structured output:\n\n- customer_request: preserve the current customer request exactly as received.\n- original_customer_request: preserve the original support request that initiated the current support case.\n- proposed_response: preserve the Support Response Sub-Agent output.\n- validation_reason: preserve the Response Validation Sub-Agent reason.\n- conversation_context: preserve the relevant conversation context.\n- router_result: preserve the Support Router result.\n- response_metadata: preserve the Support Response metadata.\n- customer_name: preserve the customer's name exactly as provided in the customer request or conversation context.\n- customer_email: preserve the customer's email address exactly as provided in the customer request or conversation context.\n\nThe original_customer_request must remain unchanged across the conversation.\n\nIf the current customer message only provides information requested by the support workflow, such as name or email, do not replace the original_customer_request with the current message.\n\nUse the previous conversation context to identify the support request that initiated the case.\n\nDo not summarize, rewrite, or invent these fields.\n\nFor customer_name and customer_email:\n\n- Do not invent, infer, modify, normalize, or guess customer information.\n- Use information already provided by the customer or present in the conversation context.\n- If the customer has not provided a value, return an empty string.\n\nGROUNDING\n\n- Do not invent Auralis policies.\n- Do not invent product information.\n- Do not invent customer data.\n- Do not invent eligibility rules.\n- Do not invent procedures.\n- Do not use general knowledge to fill gaps in Auralis-specific information.\n- Use conversation history when relevant.\n- Do not ask again for information the customer has already provided.\n- Do not assume a customer's identity from unrelated information.\n- Do not infer an email address from a name or other customer information.\n- Do not alter the customer's provided email address.\n- Do not replace the original support request with a later customer message that only provides identity or additional information.\n\nSTRUCTURED OUTPUT\n\nReturn only the fields defined by the structured output schema:\n\n- decision\n- customer_response\n- proposed_response\n- validation_reason\n- customer_request\n- original_customer_request\n- conversation_context\n- router_result\n- response_metadata\n- customer_name\n- customer_email\n\nThe decision field must contain only:\n\n- \"send\"\n- \"escalate\"\n\nFor original_customer_request:\n\n- preserve the original support request that initiated the case;\n- do not replace it with a later message containing only identity or additional information;\n- keep it unchanged across the conversation.\n\nFor customer_name and customer_email:\n\n- preserve the values provided by the customer;\n- do not invent or infer missing values;\n- return an empty string when the information is not available.\n\nDo not output any text outside the structured output."
@@ -127,8 +127,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [16, 0],
-      "id": "1e594084-ed4a-4915-b49d-6ca5bf855315",
+      "position": [336, 224],
+      "id": "39883fcd-af80-448e-ae9c-7fe478fdcf29",
       "name": "Main AI Agent"
     },
     {
@@ -136,9 +136,9 @@
         "description": "Call this tool to validate the proposed customer-facing response before it is sent.\n\nUse this tool only after the Support Router Agent, when required the Knowledge Sub-Agent, and the Support Response Sub-Agent have been used.\n\nProvide:\n- customer_request: the original customer request.\n- router_result: the classification returned by the Support Router Agent.\n- knowledge_results: the relevant information returned by the Knowledge Sub-Agent.\n- proposed_response: the response proposed by the Support Response Sub-Agent.\n- response_metadata: the additional-information and escalation metadata returned by the Support Response Sub-Agent.\n- conversation_context: relevant conversation context.\n\nThe validator determines whether the proposed response is sufficiently accurate and supported, and whether it should be sent or escalated.\n\nDo not use this tool to generate or rewrite a response.",
         "workflowId": {
           "__rl": true,
-          "value": "__REPLACE_WITH_WORKFLOW_ID__",
+          "value": "__REPLACE_WITH_RESPONSE_VALIDATION_WORKFLOW_ID__",
           "mode": "list",
-          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_RESPONSE_VALIDATION_WORKFLOW_ID__",
           "cachedResultName": "Response Validation Sub-Agent"
         },
         "workflowInputs": {
@@ -220,8 +220,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [816, 208],
-      "id": "4ff32251-344a-4dd2-930e-0d407e662974",
+      "position": [1024, 432],
+      "id": "8fc1fbd7-582a-4b95-b439-41295e92391c",
       "name": "Call 'Response Validation Sub-Agent'"
     },
     {
@@ -231,68 +231,17 @@
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [256, -128],
-      "id": "99c9a4cf-f3e0-4b36-95f9-a632c7a0771c",
+      "position": [576, 96],
+      "id": "c59327f3-a703-4700-a9c2-7f32b947143a",
       "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "46a79654-a400-4708-a061-9b89b9ef5e1c",
-              "leftValue": "={{ $('Main AI Agent').item.json.output.decision }}",
-              "rightValue": "escalate",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            },
-            {
-              "id": "db2852ed-f265-449d-a313-09423907fafc",
-              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_email }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            },
-            {
-              "id": "a14ef6ef-796a-4b0e-a4ca-34d681ec50c5",
-              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_name }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [496, -64],
-      "id": "e5adf7d9-a079-4c56-9a89-195abefe87cf",
-      "name": "If - Check Escalation Decision"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "__REPLACE_WITH_WORKFLOW_ID__",
+          "value": "__REPLACE_WITH_HUMAN_ESCALATION_WORKFLOW_ID__",
           "mode": "list",
-          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_HUMAN_ESCALATION_WORKFLOW_ID__",
           "cachedResultName": "Human Escalation Workflow"
         },
         "workflowInputs": {
@@ -408,8 +357,8 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [800, -192],
-      "id": "0cb961b1-7d0a-4d31-9b5e-8997c90abd5c",
+      "position": [1792, 192],
+      "id": "1e052f20-f62c-4608-a929-d5fe6109fdc6",
       "name": "Call 'Human Escalation Workflow'"
     },
     {
@@ -419,8 +368,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
-      "position": [1008, -192],
-      "id": "5a5c9fa2-401b-480a-9112-9838bc400811",
+      "position": [2000, 192],
+      "id": "a67eb881-5ec2-4071-ab69-74f6a3b18002",
       "name": "Send Escalation Notice"
     },
     {
@@ -430,8 +379,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
-      "position": [800, 0],
-      "id": "34493a75-2769-4b55-9737-cb8ec60dbdd7",
+      "position": [1792, 432],
+      "id": "b6ca04cb-5cd2-49e5-9e6f-acb0861031b9",
       "name": "Send Customer Response"
     },
     {
@@ -439,9 +388,9 @@
         "description": "Call this tool to formulate a proposed customer-facing response for a support request.\n\nUse this sub-agent after the Support Router Agent and, when required, the Knowledge Sub-Agent have been used.\n\nProvide:\n- customer_request: the customer's original request.\n- router_result: the classification and routing information returned by the Support Router Agent.\n- knowledge_results: the relevant information retrieved by the Knowledge Sub-Agent. If no knowledge search was required, provide the appropriate result or indicate that no knowledge search was performed.\n- conversation_context: relevant previous conversation context needed to formulate the response.\n\nThe sub-agent determines whether additional customer information is required and whether human intervention is necessary.\n\nIt does not perform knowledge retrieval itself and it does not send the final response to the customer.",
         "workflowId": {
           "__rl": true,
-          "value": "__REPLACE_WITH_WORKFLOW_ID__",
+          "value": "__REPLACE_WITH_SUPPORT_RESPONSE_WORKFLOW_ID__",
           "mode": "list",
-          "cachedResultUrl": "__REPLACE_WITH_WORKFLOW_URL__",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_SUPPORT_RESPONSE_WORKFLOW_ID__",
           "cachedResultName": "Suport Response Sub-Agent"
         },
         "workflowInputs": {
@@ -501,9 +450,527 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [640, 208],
-      "id": "745b0b92-104e-4ed5-8daa-f568858bc26b",
+      "position": [848, 432],
+      "id": "0fce79e6-372c-4584-9bb9-43ff867605fa",
       "name": "Call 'Support Response Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  id,\n  session_id,\n  status,\n  pending_action,\n  original_customer_request,\n  category,\n  priority,\n  proposed_response,\n  validation_reason,\n  conversation_context,\n  customer_name,\n  customer_email,\n  active_ticket_id\nFROM support_conversations\nWHERE session_id = $1\n  AND status = 'awaiting_customer_identity'\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $('When chat message received').item.json.sessionId }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [-368, 0],
+      "id": "1dd85b16-dccb-4c91-99cb-26200ec51cc6",
+      "name": "Get Conversation State",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"customer_name\": {\n      \"type\": \"string\",\n      \"description\": \"The customer's full name, exactly as provided in the message. Return an empty string if no name is provided.\"\n    },\n    \"customer_email\": {\n      \"type\": \"string\",\n      \"description\": \"The customer's email address, exactly as provided in the message. Return an empty string if no email is provided.\"\n    }\n  },\n  \"required\": [\n    \"customer_name\",\n    \"customer_email\"\n  ],\n  \"additionalProperties\": false\n}",
+        "options": {
+          "systemPromptTemplate": "Extract only customer identity information from the incoming message.\n\nReturn the customer's name and email address exactly as provided.\n\nRules:\n- Do not infer missing information.\n- Do not guess an email address.\n- Do not modify the customer's email address.\n- Do not normalize or invent customer information.\n- If the name is not present, return an empty string.\n- If the email is not present, return an empty string.\n- Extract only information explicitly provided in the message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [128, -368],
+      "id": "6ea1ca19-fcb7-4c9d-bdf4-e345a53127ed",
+      "name": "Extract Customer Identity"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [192, -224],
+      "id": "280c85f9-3c7a-42c7-865d-7f28665a2346",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7b08582-d715-4393-9a66-27168e383fe8",
+              "name": "customer_request",
+              "value": "={{ $('Get Conversation State').item.json.original_customer_request }}",
+              "type": "string"
+            },
+            {
+              "id": "36a8b7bf-d43f-4f6f-88e2-f0a7aee90881",
+              "name": "proposed_response",
+              "value": "={{ $('Get Conversation State').item.json.proposed_response }}",
+              "type": "string"
+            },
+            {
+              "id": "77621d73-de4f-4acd-9982-29b6c762584d",
+              "name": "validation_reason",
+              "value": "={{ $('Get Conversation State').item.json.validation_reason }}",
+              "type": "string"
+            },
+            {
+              "id": "018096b9-4a9a-455b-8637-ffa70df900e7",
+              "name": "conversation_context",
+              "value": "={{ $('Get Conversation State').item.json.conversation_context }}",
+              "type": "string"
+            },
+            {
+              "id": "c4c4cd51-ec40-4f5e-95bf-208f96660819",
+              "name": "customer_name",
+              "value": "={{ $('Extract Customer Identity').item.json.output.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "9a84e410-83bf-459d-8f81-a7d1ddea0f4d",
+              "name": "customer_email",
+              "value": "={{ $('Extract Customer Identity').item.json.output.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "3d0fc1db-77c3-4632-afd2-80a7e60ae66a",
+              "name": "original_customer_request",
+              "value": "={{ $('Get Conversation State').item.json.original_customer_request }}",
+              "type": "string"
+            },
+            {
+              "id": "228d39d8-288e-4f69-8024-7a5581f7a41f",
+              "name": "=category",
+              "value": "={{ $('Save Customer Identity').item.json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "eeddc9f8-61e0-4b64-a79f-103f70f394c9",
+              "name": "priority",
+              "value": "={{ $('Save Customer Identity').item.json.priority }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [848, -496],
+      "id": "6c3e6fd0-c35c-455a-8094-a8a1e61145d3",
+      "name": "Prepare Pending Escalation"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO support_conversations (\n  session_id,\n  status,\n  pending_action,\n  original_customer_request,\n  category,\n  priority,\n  proposed_response,\n  validation_reason,\n  conversation_context,\n  customer_name,\n  customer_email\n)\nVALUES (\n  $1,\n  'awaiting_customer_identity',\n  'create_support_ticket',\n  $2,\n  $3,\n  $4,\n  $5,\n  $6,\n  $7,\n  '',\n  ''\n)\nON CONFLICT (session_id)\nDO UPDATE SET\n  status = EXCLUDED.status,\n  pending_action = EXCLUDED.pending_action,\n  original_customer_request = EXCLUDED.original_customer_request,\n  category = EXCLUDED.category,\n  priority = EXCLUDED.priority,\n  proposed_response = EXCLUDED.proposed_response,\n  validation_reason = EXCLUDED.validation_reason,\n  conversation_context = EXCLUDED.conversation_context,\n  updated_at = now()\nRETURNING\n  id,\n  session_id,\n  status,\n  pending_action,\n  customer_name,\n  customer_email;",
+        "options": {
+          "queryReplacement": "={{ $('When chat message received').first().json.sessionId }},{{ $json.output.original_customer_request }},{{ JSON.parse($json.output.router_result)[0].output.category }},{{ JSON.parse($json.output.router_result)[0].output.priority }},{{ $json.output.proposed_response }},{{ $json.output.validation_reason }},{{ $json.output.conversation_context }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [1488, -176],
+      "id": "ed9d5d6d-95ca-4b4c-b11d-7f7a4c673186",
+      "name": "Save Pending Escalation State"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "__REPLACE_WITH_HUMAN_ESCALATION_WORKFLOW_ID__",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/__REPLACE_WITH_HUMAN_ESCALATION_WORKFLOW_ID__",
+          "cachedResultName": "Human Escalation Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_request": "={{ $('Save Customer Identity').item.json.original_customer_request }}",
+            "proposed_response": "={{ $('Save Customer Identity').item.json.proposed_response }}",
+            "validation_reason": "={{ $('Save Customer Identity').item.json.validation_reason }}",
+            "conversation_context": "={{ $('Save Customer Identity').item.json.conversation_context }}",
+            "router_result": "={{ JSON.stringify([{ output: { category: $json.category, priority: $json.priority } }]) }}",
+            "response_metadata": "={{ JSON.stringify({\"requires_human\":true}) }}",
+            "customer_name": "={{ $('Save Customer Identity').item.json.customer_name }}",
+            "customer_email": "={{ $('Save Customer Identity').item.json.customer_email }}",
+            "original_customer_request": "={{ $('Save Customer Identity').item.json.original_customer_request }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_request",
+              "displayName": "customer_request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "proposed_response",
+              "displayName": "proposed_response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "validation_reason",
+              "displayName": "validation_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "conversation_context",
+              "displayName": "conversation_context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "router_result",
+              "displayName": "router_result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "response_metadata",
+              "displayName": "response_metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "customer_email",
+              "displayName": "customer_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "original_customer_request",
+              "displayName": "original_customer_request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [1040, -496],
+      "id": "efeabcea-cfaa-4737-90a3-437318cfdde0",
+      "name": "Call 'Human Escalation Workflow - Pending Case'"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE support_conversations\nSET\n  customer_name = CASE\n    WHEN $2 = '__EMPTY__' THEN customer_name\n    ELSE $2\n  END,\n  customer_email = CASE\n    WHEN $3 = '__EMPTY__' THEN customer_email\n    ELSE $3\n  END,\n  updated_at = now()\nWHERE session_id = $1\n  AND status = 'awaiting_customer_identity'\nRETURNING\n  id,\n  session_id,\n  status,\n  original_customer_request,\n  category,\n  priority,\n  proposed_response,\n  validation_reason,\n  conversation_context,\n  customer_name,\n  customer_email,\n  active_ticket_id;",
+        "options": {
+          "queryReplacement": "={{ $('When chat message received').first().json.sessionId }},{{ $('Extract Customer Identity').first().json.output.customer_name || $('Get Conversation State').first().json.customer_name || '__EMPTY__' }},{{ $('Extract Customer Identity').first().json.output.customer_email || $('Get Conversation State').first().json.customer_email || '__EMPTY__' }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [656, -496],
+      "id": "31c3bb5d-60df-4893-accb-919e7efd9575",
+      "name": "Save Customer Identity"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE support_conversations\nSET\n  customer_name = CASE\n    WHEN $2 = '__EMPTY__' THEN customer_name\n    ELSE $2\n  END,\n  customer_email = CASE\n    WHEN $3 = '__EMPTY__' THEN customer_email\n    ELSE $3\n  END,\n  updated_at = now()\nWHERE session_id = $1\n  AND status = 'awaiting_customer_identity'\nRETURNING\n  id,\n  session_id,\n  status,\n  customer_name,\n  customer_email,\n  updated_at;",
+        "options": {
+          "queryReplacement": "={{ $('When chat message received').first().json.sessionId }},{{ $('Extract Customer Identity').item.json.output.customer_name || '__EMPTY__' }},{{ $('Extract Customer Identity').item.json.output.customer_email || '__EMPTY__' }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [656, -272],
+      "id": "7ba4fc4f-e14a-4f81-9ddc-38010d737734",
+      "name": "Save Partial Customer Identity"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE support_conversations\nSET\n  status = 'escalated',\n  pending_action = NULL,\n  updated_at = now()\nWHERE session_id = $1\nRETURNING\n  id,\n  session_id,\n  status,\n  pending_action,\n  original_customer_request,\n  category,\n  priority,\n  proposed_response,\n  validation_reason,\n  conversation_context,\n  customer_name,\n  customer_email,\n  active_ticket_id,\n  $2 AS ticket_number;",
+        "options": {
+          "queryReplacement": "={{ $('When chat message received').first().json.sessionId }},{{ $(\"Call 'Human Escalation Workflow - Pending Case'\").item.json.ticket_number }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [1248, -496],
+      "id": "bc91e98e-7f59-40d8-bb2f-56f22a16e9fc",
+      "name": "Mark Conversation as Escalated"
+    },
+    {
+      "parameters": {
+        "content": "## Conversation State",
+        "height": 240,
+        "width": 608,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-608, -64],
+      "typeVersion": 1,
+      "id": "f74fd67e-9f9f-4011-b3bd-30da31ae9003",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## AI Support Orchestration",
+        "height": 576,
+        "width": 1152,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [32, 48],
+      "typeVersion": 1,
+      "id": "ae0a33bc-1d10-42d8-b2cd-aebbbd837f69",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Pending Escalation & Identity",
+        "height": 560,
+        "width": 1648
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [32, -544],
+      "typeVersion": 1,
+      "id": "426e946b-03dc-48d4-8eb7-3caf5f89f353",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Final Decision & Escalation",
+        "height": 576,
+        "width": 992,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1216, 48],
+      "typeVersion": 1,
+      "id": "2234ef70-9696-4e96-81f1-b801599de62b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fae4fd90-b851-49cf-b4d1-4b9a1e52283b",
+              "leftValue": "={{ $json.status === 'awaiting_customer_identity' }}",
+              "rightValue": "awaiting_customer_identity",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-160, 0],
+      "id": "0d0fa8e3-a9d8-4add-9615-cc13856e695a",
+      "name": "Pending Customer Identity?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c68a44c1-1c71-4e0a-8661-473e912d50c0",
+              "leftValue": "={{ !!($json.output.customer_name || $('Get Conversation State').first().json.customer_name) && !!($json.output.customer_email || $('Get Conversation State').first().json.customer_email) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [432, -368],
+      "id": "6e1f421e-f96f-45b0-b3b8-49ed55b82ad4",
+      "name": "Customer Identity Complete?"
+    },
+    {
+      "parameters": {
+        "message": "={{\n  !$('Extract Customer Identity').item.json.output.customer_name &&\n  !$('Extract Customer Identity').item.json.output.customer_email\n    ? \"Please provide your name and email address.\"\n    : !$('Extract Customer Identity').item.json.output.customer_name\n      ? \"Please provide your name.\"\n      : \"Please provide your email address.\"\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [848, -272],
+      "id": "56b8b126-d007-4897-8779-a2b87c8825cc",
+      "name": "Request Missing Customer Identity"
+    },
+    {
+      "parameters": {
+        "message": "=Your request has been escalated to human support.\n\nTicket number: #{{ $(\"Call 'Human Escalation Workflow - Pending Case'\").first().json.ticket_number }}\n\nWe’ll use {{ $(\"Call 'Human Escalation Workflow - Pending Case'\").item.json.customer_email }} for follow-up. Our support team will review your case and contact you regarding the next steps.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [1456, -496],
+      "id": "57f658e6-4310-4bfd-b67f-e02d3636541c",
+      "name": "Notify Customer of Escalation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c08e5c8-d177-4b82-a172-a483949790ae",
+              "leftValue": "={{ $json.output.decision === 'escalate' && (!$json.output.customer_name || !$json.output.customer_email) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1280, 288],
+      "id": "634ebe28-20ac-41e4-8cf9-da7be0b7f656",
+      "name": "Escalation Requires Customer Identity?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "46a79654-a400-4708-a061-9b89b9ef5e1c",
+              "leftValue": "={{ $('Main AI Agent').item.json.output.decision }}",
+              "rightValue": "escalate",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "db2852ed-f265-449d-a313-09423907fafc",
+              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a14ef6ef-796a-4b0e-a4ca-34d681ec50c5",
+              "leftValue": "={{ $('Main AI Agent').item.json.output.customer_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1552, 384],
+      "id": "f20a9d0e-aa9c-4779-9501-d4232166b197",
+      "name": "Check Escalation Decision"
     }
   ],
   "pinData": {},
@@ -512,7 +979,7 @@
       "main": [
         [
           {
-            "node": "Main AI Agent",
+            "node": "Get Conversation State",
             "type": "main",
             "index": 0
           }
@@ -589,25 +1056,7 @@
       "main": [
         [
           {
-            "node": "If - Check Escalation Decision",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If - Check Escalation Decision": {
-      "main": [
-        [
-          {
-            "node": "Call 'Human Escalation Workflow'",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Customer Response",
+            "node": "Escalation Requires Customer Identity?",
             "type": "main",
             "index": 0
           }
@@ -631,6 +1080,177 @@
           {
             "node": "Main AI Agent",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Conversation State": {
+      "main": [
+        [
+          {
+            "node": "Pending Customer Identity?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Customer Identity",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Customer Identity": {
+      "main": [
+        [
+          {
+            "node": "Customer Identity Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Escalation State": {
+      "main": [
+        [
+          {
+            "node": "Send Customer Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Pending Escalation": {
+      "main": [
+        [
+          {
+            "node": "Call 'Human Escalation Workflow - Pending Case'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Human Escalation Workflow - Pending Case'": {
+      "main": [
+        [
+          {
+            "node": "Mark Conversation as Escalated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Customer Identity": {
+      "main": [
+        [
+          {
+            "node": "Prepare Pending Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Partial Customer Identity": {
+      "main": [
+        [
+          {
+            "node": "Request Missing Customer Identity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Conversation as Escalated": {
+      "main": [
+        [
+          {
+            "node": "Notify Customer of Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pending Customer Identity?": {
+      "main": [
+        [
+          {
+            "node": "Extract Customer Identity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Main AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Identity Complete?": {
+      "main": [
+        [
+          {
+            "node": "Save Customer Identity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Partial Customer Identity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Requires Customer Identity?": {
+      "main": [
+        [
+          {
+            "node": "Save Pending Escalation State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Escalation Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Escalation Decision": {
+      "main": [
+        [
+          {
+            "node": "Call 'Human Escalation Workflow'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Customer Response",
+            "type": "main",
             "index": 0
           }
         ]

@@ -63,19 +63,64 @@ The Error Handler is a separate workflow shared by the workflows that have error
 
 # Support Automation in Action
 
-**Auralis** is a fictional audio-products company used to demonstrate the support lifecycle without relying on a real company's private customer data.
+**Auralis** is a fictional audio company created for demonstration purposes. Its knowledge base covers product information, warranty, returns, refunds, shipping, and troubleshooting.
 
-Example scenarios include:
+This demo illustrates the customer support lifecycle, from answering a knowledge-based question to escalating a product issue to human support.
 
-- asking about standard shipping;
-- asking about warranty or return policies;
-- reporting a product issue;
-- requesting a replacement;
-- explicitly asking for human support;
-- providing the customer's name and email in the initial message;
-- providing identity details across multiple messages when a case is pending.
+### End-to-End Demo
 
-The project is designed to illustrate not only response generation, but also state persistence, routing, ticket creation, operational notifications, and error handling.
+The following GIF demonstrates the complete customer support lifecycle, from a knowledge-grounded response to customer identity collection, ticket creation, and Slack notification.
+
+![End-to-End Customer Support Workflow](screenshots/ai_customer_support_automation_n8n_main_workflow.gif)
+
+### Reproduce the Demo
+
+Follow these steps in the n8n chat interface using the **same conversation session** throughout the test.
+
+#### Step 1 — Knowledge Retrieval (RAG)
+
+Ask a question about the company's warranty policy:
+
+```text
+Hi! What is the warranty period for Auralis headphones, and what does it cover?
+```
+
+**Expected result:** The Knowledge Sub-Agent retrieves relevant information from the knowledge base, allowing the system to generate a response grounded in the available documentation.
+
+#### Step 2 — Product Issue and Human Escalation
+
+Report a product malfunction and request human support:
+
+```text
+Thanks! My headphones have actually stopped working after two weeks, and I've already tried different cables. I still can't get them to turn on. Can you escalate this issue to your support team?
+```
+
+**Expected result:** The system identifies the need for human intervention, saves the pending escalation state in PostgreSQL, and asks the customer for their name and email address. A support ticket is not created yet because the customer's identity is still missing.
+
+#### Step 3 — Customer Identity and Ticket Creation
+
+Provide the requested customer details:
+
+```text
+My name is John Smith and my email is johnsmith@example.com.
+```
+
+**Expected result:** The workflow resumes the pending escalation, creates a support ticket in PostgreSQL, and sends a notification to the support team through Slack.
+
+These examples use fictional customer details. Use test data when reproducing the workflow.
+
+### Additional Supported Scenarios
+
+Beyond the end-to-end demo, the system supports several customer support scenarios:
+
+- Asking about shipping, warranty, returns, and refund policies.
+- Reporting product issues or requesting replacements.
+- Explicitly requesting human support.
+- Providing customer name and email in the initial message.
+- Providing customer identity across multiple messages when an escalation is pending.
+- Reusing existing customer records when the same email is used for a new support ticket.
+
+The project demonstrates more than AI-generated responses: it combines knowledge retrieval, intelligent routing, persistent conversation state, automated ticket creation, Slack notifications, and centralized error handling.
 
 ---
 

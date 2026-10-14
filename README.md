@@ -147,36 +147,69 @@ The router is a classification component. It does not create tickets or communic
 
 # Knowledge Sub-Agent and RAG
 
-The Knowledge Sub-Agent is responsible for retrieving company-specific information from the Auralis knowledge base. It is used when a response needs reliable evidence from company documentation.
+The project implements a Retrieval-Augmented Generation (RAG) pipeline that grounds AI-generated support responses in the Auralis knowledge base.
 
-## Retrieval pipeline
+The RAG pipeline consists of two complementary processes: **knowledge ingestion**, which prepares and indexes the documentation, and **knowledge retrieval**, which fetches relevant evidence during customer support interactions.
 
-The knowledge ingestion workflow reads the Markdown knowledge documents from Google Drive, splits the text into chunks, creates embeddings, and indexes the chunks in Pinecone. At runtime, the Knowledge Sub-Agent retrieves relevant excerpts for the current support question.
+### Knowledge Ingestion Workflow
+
+The Knowledge Ingestion Workflow prepares the knowledge base for semantic retrieval by loading Markdown documents from Google Drive, splitting their content into chunks, generating embeddings using OpenAI, and indexing the resulting vectors in Pinecone.
+
+![Knowledge Ingestion Workflow](screenshots/knowledge_ingestion_workflow_n8n.png)
+
+The ingestion process follows four steps:
+
+1. **Document loading:** Retrieve the Markdown documents from Google Drive.
+2. **Text splitting:** Divide the content into smaller chunks suitable for retrieval.
+3. **Embedding generation:** Generate vector embeddings using OpenAI's `text-embedding-3-small`.
+4. **Vector indexing:** Store the embedded chunks in the Pinecone `auralis-support` index, together with their source metadata.
+
+The knowledge base contains six Markdown documents covering company information, products, warranty, returns and refunds, shipping, and headphone troubleshooting.
+
+This workflow runs separately from customer support conversations and prepares the documents for retrieval at runtime.
+
+### Retrieval Pipeline
+
+When a customer request requires company-specific information, the Main AI Agent invokes the Knowledge Sub-Agent, which uses the connected Pinecone retrieval tool to retrieve relevant document excerpts.
 
 ```text
-Google Drive knowledge documents
-          ↓
-       Text split
-          ↓
-       Embeddings
-          ↓
-    Pinecone index
-          ↓
-Knowledge Sub-Agent retrieval
-          ↓
- Relevant excerpts and sources
+Customer Request
+       |
+       v
+Support Router
+       |
+       v
+Knowledge Sub-Agent
+       |
+       v
+Pinecone Vector Search
+       |
+       v
+Relevant Excerpts and Sources
+       |
+       v
+Support Response Sub-Agent
+       |
+       v
+Response Validation Sub-Agent
+       |
+       v
+Send or Escalate
 ```
 
-## Grounding rules
+Knowledge retrieval is conditional: requests that do not require company-specific information can proceed without invoking the Knowledge Sub-Agent.
 
-- Use retrieved documentation as the source of truth for Auralis-specific policy and product claims.
-- Do not invent warranty terms, refund rules, eligibility, product features, or procedures.
-- When the retrieved material does not support a claim, the system should acknowledge that the information could not be verified rather than fill the gap with a guess.
-- The Knowledge Sub-Agent retrieves evidence; the Support Response Sub-Agent uses that evidence to draft a response.
+### Grounding and Reliability
 
-The fictional knowledge base includes information about product support, warranty coverage, returns, refunds, shipping, and Auralis audio products.
+Retrieved documentation is the source of truth for Auralis-specific policies, procedures, and product claims.
 
----
+- Use retrieved evidence to support company-specific statements.
+- Do not invent warranty terms, refund rules, eligibility conditions, product features, or procedures.
+- Semantic similarity alone does not guarantee that a retrieved excerpt supports the customer's question.
+- Missing documentation does not prove that a policy or benefit exists or does not exist.
+- Requests requiring confirmation of undocumented policies must be escalated for human review.
+
+The Knowledge Sub-Agent retrieves evidence, the Support Response Sub-Agent uses that evidence to draft a response, and the Response Validation Sub-Agent determines whether the case can be handled automatically or requires human intervention.
 
 # Support Response Sub-Agent
 
